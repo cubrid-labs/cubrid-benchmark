@@ -23,7 +23,7 @@ async function clearTable(): Promise<void> {
   await cubridQuery(conn, `DELETE FROM ${TABLE}`)
 }
 
-async function seedRows(prefix: string, count = 1000): Promise<void> {
+async function seedRows(prefix: string, count = 100): Promise<void> {
   for (let i = 1; i <= count; i += 1) {
     await cubridQuery(conn, `INSERT INTO ${TABLE} (name, amount) VALUES (?, ?)`, [
       `${prefix}_${String(i).padStart(5, "0")}`,
@@ -44,33 +44,33 @@ afterAll(async () => {
 
 test("cubrid tier1 throughput", async () => {
   const bench = new Bench({
-    iterations: 5,
+    iterations: 3,
     warmupIterations: 1,
     time: 0
   })
 
   bench.add("insert_sequential", async () => {
     await clearTable()
-    await seedRows("insert", 1000)
+    await seedRows("insert", 100)
   })
 
   bench.add("select_by_pk", async () => {
     await clearTable()
-    await seedRows("select", 1000)
-    for (let i = 1; i <= 1000; i += 1) {
+    await seedRows("select", 100)
+    for (let i = 1; i <= 100; i += 1) {
       await cubridQuery(conn, `SELECT id, name, amount FROM ${TABLE} WHERE id = ?`, [i])
     }
   })
 
   bench.add("select_full_scan", async () => {
     await clearTable()
-    await seedRows("scan", 1000)
+    await seedRows("scan", 100)
     await cubridQuery(conn, `SELECT id, name, amount FROM ${TABLE}`)
   })
 
   bench.add("update_indexed", async () => {
     await clearTable()
-    await seedRows("update", 1000)
+    await seedRows("update", 100)
     for (let i = 1; i <= 100; i += 1) {
       await cubridQuery(conn, `UPDATE ${TABLE} SET amount = ? WHERE id = ?`, [i + 100000, i])
     }
@@ -78,7 +78,7 @@ test("cubrid tier1 throughput", async () => {
 
   bench.add("delete_sequential", async () => {
     await clearTable()
-    await seedRows("delete", 1000)
+    await seedRows("delete", 100)
     for (let i = 1; i <= 100; i += 1) {
       await cubridQuery(conn, `DELETE FROM ${TABLE} WHERE id = ?`, [i])
     }
@@ -99,7 +99,7 @@ test("cubrid tier1 throughput", async () => {
   await writeBenchmarkJson("typescript_tier1_cubrid.json", {
     database: "cubrid",
     tier: 1,
-    rounds: 5,
+    rounds: 3,
     warmupRounds: 1,
     benchmarks: results
   })

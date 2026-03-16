@@ -1,0 +1,36 @@
+{
+  "database": "mysql",
+  "driver": "go-sql-driver/mysql",
+  "tier": 1,
+  "rounds": 5,
+  "goos": "linux",
+  "goarch": "amd64",
+  "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+  "benchmarks": [
+    {
+      "name": "insert_sequential",
+      "ns_per_op": 1023231428,
+      "mean_seconds": 1.023
+    },
+    {
+      "name": "select_by_pk",
+      "ns_per_op": 1138218581,
+      "mean_seconds": 1.138
+    },
+    {
+      "name": "select_full_scan",
+      "ns_per_op": 1106673394,
+      "mean_seconds": 1.107
+    },
+    {
+      "name": "update_indexed",
+      "ns_per_op": 1113419389,
+      "mean_seconds": 1.113
+    },
+    {
+      "name": "delete_sequential",
+      "ns_per_op": 1055006305,
+      "mean_seconds": 1.055
+    }
+  ]
+}

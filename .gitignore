@@ -1,7 +1,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-results/
+results/*
 !results/.gitkeep
 !results/*.json
 node_modules/

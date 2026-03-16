@@ -1,0 +1,53 @@
+{
+  "database": "mysql",
+  "tier": 1,
+  "rounds": 3,
+  "warmupRounds": 1,
+  "benchmarks": [
+    {
+      "name": "insert_sequential",
+      "runs": 3,
+      "hz": 0.06770004661054034,
+      "meanSeconds": 14.845173547000003,
+      "minSeconds": 13.940599054999998,
+      "maxSeconds": 16.353929889000007,
+      "variance": 1729818.2094858584
+    },
+    {
+      "name": "select_by_pk",
+      "runs": 3,
+      "hz": 0.07210159169201578,
+      "meanSeconds": 13.885392426000006,
+      "minSeconds": 13.237496970000008,
+      "maxSeconds": 14.324858137000003,
+      "variance": 328170.7958254722
+    },
+    {
+      "name": "select_full_scan",
+      "runs": 3,
+      "hz": 0.06823253810550689,
+      "meanSeconds": 14.708855315666666,
+      "minSeconds": 13.806174752999999,
+      "maxSeconds": 15.930902428000001,
+      "variance": 1205113.1680122237
+    },
+    {
+      "name": "update_indexed",
+      "runs": 3,
+      "hz": 0.06730927141200863,
+      "meanSeconds": 14.87240368066667,
+      "minSeconds": 14.20817867199998,
+      "maxSeconds": 15.306789029000006,
+      "variance": 341355.88122354494
+    },
+    {
+      "name": "delete_sequential",
+      "runs": 3,
+      "hz": 0.06896601313246613,
+      "meanSeconds": 14.555083482333334,
+      "minSeconds": 13.473786554999998,
+      "maxSeconds": 15.670094327,
+      "variance": 1206794.4285033701
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "database": "cubrid",
+  "tier": 1,
+  "rounds": 3,
+  "warmupRounds": 1,
+  "benchmarks": [
+    {
+      "name": "insert_sequential",
+      "runs": 3,
+      "hz": 0.1619211933245495,
+      "meanSeconds": 6.180990779666668,
+      "minSeconds": 5.956301807000004,
+      "maxSeconds": 6.391700779999999,
+      "variance": 47539.62517298482
+    },
+    {
+      "name": "select_by_pk",
+      "runs": 3,
+      "hz": 0.15238604404585904,
+      "meanSeconds": 6.571460052333336,
+      "minSeconds": 6.231178331999996,
+      "maxSeconds": 6.779553102000006,
+      "variance": 88284.10558260683
+    },
+    {
+      "name": "select_full_scan",
+      "runs": 3,
+      "hz": 0.17878834745357955,
+      "meanSeconds": 5.595021157666667,
+      "minSeconds": 5.478028216999999,
+      "maxSeconds": 5.724359482,
+      "variance": 15284.079402533
+    },
+    {
+      "name": "update_indexed",
+      "runs": 3,
+      "hz": 0.15842899769790791,
+      "meanSeconds": 6.31701293466667,
+      "minSeconds": 6.173548855000001,
+      "maxSeconds": 6.571036823000002,
+      "variance": 48666.774645499296
+    },
+    {
+      "name": "delete_sequential",
+      "runs": 3,
+      "hz": 0.15481914597983415,
+      "meanSeconds": 6.4705367953333335,
+      "minSeconds": 6.102008541000003,
+      "maxSeconds": 6.733523941000007,
+      "variance": 108057.11932323159
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "database": "cubrid",
+  "driver": "cubrid-go",
+  "tier": 1,
+  "rounds": 5,
+  "goos": "linux",
+  "goarch": "amd64",
+  "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+  "benchmarks": [
+    {
+      "name": "insert_sequential",
+      "ns_per_op": 981730119,
+      "mean_seconds": 0.982
+    },
+    {
+      "name": "select_by_pk",
+      "ns_per_op": 1578970229,
+      "mean_seconds": 1.579
+    },
+    {
+      "name": "select_full_scan",
+      "ns_per_op": 1023383623,
+      "mean_seconds": 1.023
+    },
+    {
+      "name": "update_indexed",
+      "ns_per_op": 1074767833,
+      "mean_seconds": 1.075
+    },
+    {
+      "name": "delete_sequential",
+      "ns_per_op": 1143462772,
+      "mean_seconds": 1.143
+    }
+  ]
+}
