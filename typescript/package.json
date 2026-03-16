@@ -1,0 +1,20 @@
+{
+  "name": "cubrid-benchmark-ts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tier0": "vitest run --config vitest.config.ts bench_tier0*.test.ts",
+    "tier1": "vitest run --config vitest.config.ts bench_tier1*.test.ts",
+    "bench": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "cubrid-client": "^1.0.0",
+    "mysql2": "^3.15.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tinybench": "^5.0.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
