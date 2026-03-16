@@ -43,10 +43,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r python/requirements.txt
+
+      - name: Install TypeScript dependencies
+        run: cd typescript && npm ci
 
       - name: Wait for databases
         run: ./scripts/wait_for_db.sh
@@ -54,8 +67,14 @@ jobs:
       - name: Apply schema and seed data
         run: make seed
 
-      - name: Run Tier 0 functional tests
+      - name: Run Python Tier 0
         run: make tier0
+
+      - name: Run TypeScript Tier 0
+        run: make tier0-ts
+
+      - name: Run Go Tier 0
+        run: make tier0-go
 
   nightly:
     if: github.event_name != 'pull_request'
@@ -93,10 +112,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r python/requirements.txt
+
+      - name: Install TypeScript dependencies
+        run: cd typescript && npm ci
 
       - name: Wait for databases
         run: ./scripts/wait_for_db.sh
@@ -104,11 +136,23 @@ jobs:
       - name: Apply schema and seed data
         run: make seed
 
-      - name: Run Tier 0 functional tests
+      - name: Run Python Tier 0
         run: make tier0
 
-      - name: Run Tier 1 python benchmarks
+      - name: Run TypeScript Tier 0
+        run: make tier0-ts
+
+      - name: Run Go Tier 0
+        run: make tier0-go
+
+      - name: Run Python Tier 1
         run: make tier1-python
+
+      - name: Run TypeScript Tier 1
+        run: make tier1-ts
+
+      - name: Run Go Tier 1
+        run: make tier1-go
 
       - name: Normalize benchmark result
         run: python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
