@@ -21,7 +21,7 @@ func getCubridDSN() string {
 	host := envOrDefault("CUBRID_HOST", "localhost")
 	port := envOrDefault("CUBRID_PORT", "33000")
 	database := envOrDefault("CUBRID_DB", "benchdb")
-	return fmt.Sprintf("CUBRID:%s:%s:%s:::", host, port, database)
+	return fmt.Sprintf("cubrid://dba:@%s:%s/%s", host, port, database)
 }
 
 func getMysqlDSN() string {

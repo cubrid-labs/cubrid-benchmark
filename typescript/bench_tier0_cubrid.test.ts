@@ -1,4 +1,4 @@
-import { afterAll, test } from "vitest"
+import { afterAll, expect, test } from "vitest"
 import {
   cubridClose,
   cubridQuery,
@@ -46,9 +46,9 @@ test("cubrid tier0 smoke", async () => {
 
   const countRows = (await cubridQuery(
     conn,
-    "SELECT COUNT(*) AS count FROM bench_tier0_cubrid_ts"
-  )) as Array<{ count: number }>
-  expect(Number(countRows[0].count)).toBe(0)
+    "SELECT COUNT(*) AS cnt FROM bench_tier0_cubrid_ts"
+  )) as Array<{ cnt: number }>
+  expect(Number(countRows[0].cnt)).toBe(0)
 
   await cubridQuery(conn, "DROP TABLE IF EXISTS bench_tier0_cubrid_ts")
 })

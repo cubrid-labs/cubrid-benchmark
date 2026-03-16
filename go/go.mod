@@ -8,3 +8,5 @@ require (
 )
 
 require filippo.io/edwards25519 v1.1.0 // indirect
+
+replace github.com/cubrid-labs/cubrid-go => /data/GitHub/cubrid-go

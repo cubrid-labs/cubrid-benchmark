@@ -2,6 +2,7 @@ services:
   cubrid:
     image: cubrid/cubrid:11.2
     container_name: cubrid-bench-cubrid
+    shm_size: 256m
     environment:
       CUBRID_DB: benchdb
     ports:

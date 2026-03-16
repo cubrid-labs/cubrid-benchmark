@@ -1,4 +1,4 @@
-import { afterAll, test } from "vitest"
+import { afterAll, expect, test } from "vitest"
 import { getMysqlConnection, type MysqlConnection } from "./helpers"
 
 let conn: MysqlConnection | null = null

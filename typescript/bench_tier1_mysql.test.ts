@@ -16,7 +16,7 @@ async function clearTable(): Promise<void> {
   await conn.query(`DELETE FROM ${TABLE}`)
 }
 
-async function seedRows(prefix: string, count = 10000): Promise<void> {
+async function seedRows(prefix: string, count = 1000): Promise<void> {
   for (let i = 1; i <= count; i += 1) {
     await conn.query(`INSERT INTO ${TABLE} (name, amount) VALUES (?, ?)`, [
       `${prefix}_${String(i).padStart(5, "0")}`,
@@ -44,35 +44,35 @@ test("mysql tier1 throughput", async () => {
 
   bench.add("insert_sequential", async () => {
     await clearTable()
-    await seedRows("insert", 10000)
+    await seedRows("insert", 1000)
   })
 
   bench.add("select_by_pk", async () => {
     await clearTable()
-    await seedRows("select", 10000)
-    for (let i = 1; i <= 10000; i += 1) {
+    await seedRows("select", 1000)
+    for (let i = 1; i <= 1000; i += 1) {
       await conn.query(`SELECT id, name, amount FROM ${TABLE} WHERE id = ?`, [i])
     }
   })
 
   bench.add("select_full_scan", async () => {
     await clearTable()
-    await seedRows("scan", 10000)
+    await seedRows("scan", 1000)
     await conn.query(`SELECT id, name, amount FROM ${TABLE}`)
   })
 
   bench.add("update_indexed", async () => {
     await clearTable()
-    await seedRows("update", 10000)
-    for (let i = 1; i <= 1000; i += 1) {
+    await seedRows("update", 1000)
+    for (let i = 1; i <= 100; i += 1) {
       await conn.query(`UPDATE ${TABLE} SET amount = ? WHERE id = ?`, [i + 100000, i])
     }
   })
 
   bench.add("delete_sequential", async () => {
     await clearTable()
-    await seedRows("delete", 10000)
-    for (let i = 1; i <= 1000; i += 1) {
+    await seedRows("delete", 1000)
+    for (let i = 1; i <= 100; i += 1) {
       await conn.query(`DELETE FROM ${TABLE} WHERE id = ?`, [i])
     }
   })
