@@ -36,12 +36,13 @@ def cubrid_conn() -> Generator[DBConnection, None, None]:
     cubrid_module = importlib.import_module("pycubrid")
     cubrid_connect = getattr(cubrid_module, "connect")
 
-    dsn = "CUBRID:{host}:{port}:{db}:::".format(
+    conn = cast(DBConnection, cubrid_connect(
         host=_env("CUBRID_HOST", "localhost"),
-        port=_env("CUBRID_PORT", "33000"),
-        db=_env("CUBRID_DB", "benchdb"),
-    )
-    conn = cast(DBConnection, cubrid_connect(dsn, user="dba", password=""))
+        port=int(_env("CUBRID_PORT", "33000")),
+        database=_env("CUBRID_DB", "benchdb"),
+        user="dba",
+        password="",
+    ))
     try:
         yield conn
     finally:

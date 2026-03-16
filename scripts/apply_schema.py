@@ -31,12 +31,13 @@ def apply_cubrid() -> None:
     cubrid_module = importlib.import_module("pycubrid")
     cubrid_connect = getattr(cubrid_module, "connect")
 
-    dsn = "CUBRID:{host}:{port}:{db}:::".format(
+    conn = cubrid_connect(
         host=_env("CUBRID_HOST", "localhost"),
-        port=_env("CUBRID_PORT", "33000"),
-        db=_env("CUBRID_DB", "benchdb"),
+        port=int(_env("CUBRID_PORT", "33000")),
+        database=_env("CUBRID_DB", "benchdb"),
+        user="dba",
+        password="",
     )
-    conn = cubrid_connect(dsn, user="dba", password="")
     cur = conn.cursor()
     try:
         _run_file(cur, SCHEMA_DIR / "cubrid_init.sql")

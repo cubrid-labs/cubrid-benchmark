@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 results/
 !results/.gitkeep
+!results/*.json
 node_modules/
 .env
 *.egg-info/

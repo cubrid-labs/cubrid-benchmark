@@ -1,5 +1,4 @@
 services:
-services:
   cubrid:
     image: cubrid/cubrid:11.2
     container_name: cubrid-bench-cubrid
