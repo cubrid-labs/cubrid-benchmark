@@ -75,3 +75,4 @@ make all
 - https://github.com/cubrid-labs/cubrid-go
 - https://github.com/cubrid-labs/cubrid-client
 - https://github.com/cubrid-labs/drizzle-cubrid
+- https://github.com/cubrid-labs/cubrid-rs
