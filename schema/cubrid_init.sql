@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS bench_users;
+DROP TABLE IF EXISTS bench_products;
+
+CREATE TABLE bench_users (
+    id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(200) NOT NULL,
+    age INTEGER NOT NULL,
+    created_at DATETIME NOT NULL
+);
+
+CREATE TABLE bench_products (
+    id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    stock INTEGER NOT NULL,
+    category VARCHAR(50) NOT NULL
+);

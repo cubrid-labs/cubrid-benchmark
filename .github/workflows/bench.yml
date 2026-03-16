@@ -1,0 +1,129 @@
+name: Benchmark
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  tier0-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      cubrid:
+        image: cubrid/cubrid:11.2
+        env:
+          CUBRID_DB: benchdb
+        ports:
+          - 33000:33000
+        options: >-
+          --health-cmd "bash -c 'echo > /dev/tcp/127.0.0.1/33000'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: bench
+          MYSQL_DATABASE: benchdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h127.0.0.1 -uroot -pbench --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r python/requirements.txt
+
+      - name: Wait for databases
+        run: ./scripts/wait_for_db.sh
+
+      - name: Apply schema and seed data
+        run: make seed
+
+      - name: Run Tier 0 functional tests
+        run: make tier0
+
+  nightly:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      cubrid:
+        image: cubrid/cubrid:11.2
+        env:
+          CUBRID_DB: benchdb
+        ports:
+          - 33000:33000
+        options: >-
+          --health-cmd "bash -c 'echo > /dev/tcp/127.0.0.1/33000'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: bench
+          MYSQL_DATABASE: benchdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h127.0.0.1 -uroot -pbench --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r python/requirements.txt
+
+      - name: Wait for databases
+        run: ./scripts/wait_for_db.sh
+
+      - name: Apply schema and seed data
+        run: make seed
+
+      - name: Run Tier 0 functional tests
+        run: make tier0
+
+      - name: Run Tier 1 python benchmarks
+        run: make tier1-python
+
+      - name: Normalize benchmark result
+        run: python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
+
+      - name: Publish benchmark report
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Python Tier1 Benchmark
+          tool: pytest
+          output-file-path: results/python_tier1.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          alert-threshold: "110%"
+          comment-on-alert: true
+          fail-on-alert: false
+          summary-always: true
