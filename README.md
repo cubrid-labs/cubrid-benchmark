@@ -144,7 +144,10 @@ make tier1-go          # Go tier1
 | [cubrid-client](https://github.com/cubrid-labs/cubrid-client) | TypeScript | [npm](https://www.npmjs.com/package/cubrid-client) |
 | [drizzle-cubrid](https://github.com/cubrid-labs/drizzle-cubrid) | TypeScript | [npm](https://www.npmjs.com/package/drizzle-cubrid) |
 | [cubrid-go](https://github.com/cubrid-labs/cubrid-go) | Go | [pkg.go.dev](https://pkg.go.dev/github.com/cubrid-labs/cubrid-go) |
-| [cubrid-rs](https://github.com/cubrid-labs/cubrid-rs) | Rust | Planned |
+| [gorm-cubrid](https://github.com/cubrid-labs/gorm-cubrid) | Go | [pkg.go.dev](https://pkg.go.dev/github.com/cubrid-labs/gorm-cubrid) |
+| [cubrid-rs](https://github.com/cubrid-labs/cubrid-rs) | Rust | [crates.io](https://crates.io/crates/cubrid-client) |
+| [sea-orm-cubrid](https://github.com/cubrid-labs/sea-orm-cubrid) | Rust | [crates.io](https://crates.io/crates/sea-orm-cubrid) |
+| [cubrid-cookbook](https://github.com/cubrid-labs/cubrid-cookbook) | Multi | — |
 
 ## License
 
