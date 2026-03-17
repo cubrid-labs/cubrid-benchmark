@@ -13,43 +13,37 @@ performance against MySQL across Python, Go, and TypeScript driver/ORM stacks.
 
 ## Architecture
 
-```
-cubrid-benchmark/
-├── docker/
-│   └── compose.yml              # CUBRID 11.2 + MySQL 8.0
-├── schema/
-│   ├── cubrid_init.sql           # CUBRID schema
-│   ├── mysql_init.sql            # MySQL schema
-│   └── seed.sql                  # Shared deterministic seed data
-├── python/
-│   ├── conftest.py               # Shared pytest fixtures (connections, cleanup)
-│   ├── bench_pycubrid.py         # Tier 1: pycubrid driver benchmarks
-│   ├── bench_pymysql.py          # Tier 1: PyMySQL driver benchmarks
-│   ├── bench_sqlalchemy.py       # Tier 2: SQLAlchemy ORM benchmarks
-│   └── requirements.txt         # pytest-benchmark, pycubrid, PyMySQL, SQLAlchemy
-├── go/
-│   ├── cubrid_bench_test.go      # Tier 1: cubrid-go benchmarks
-│   ├── mysql_bench_test.go       # Tier 1: go-sql-driver/mysql benchmarks
-│   ├── gorm_bench_test.go        # Tier 2: GORM benchmarks
-│   └── go.mod
-├── ts/
-│   ├── bench_cubrid.ts           # Tier 1: cubrid-client benchmarks
-│   ├── bench_mysql.ts            # Tier 1: mysql2 benchmarks
-│   ├── bench_drizzle.ts          # Tier 2: Drizzle benchmarks
-│   ├── package.json              # tinybench, cubrid-client, mysql2, drizzle-cubrid
-│   └── tsconfig.json
-├── scripts/
-│   ├── wait_for_db.sh            # Wait for both DBs to be ready
-│   └── normalize_results.py     # Convert all outputs to common JSON
-├── Makefile                      # make tier0, make tier1-python, make all, etc.
-├── .github/
-│   └── workflows/
-│       └── bench.yml             # Nightly CI + GitHub Pages publish
-├── PRD.md
-├── AGENTS.md
-├── README.md
-├── LICENSE
-└── .gitignore
+```mermaid
+flowchart TD
+    ROOT["cubrid-benchmark/"]
+
+    DOCKER["docker/<br/>compose.yml<br/>CUBRID 11.2 + MySQL 8.0"]
+    SCHEMA["schema/<br/>cubrid_init.sql, mysql_init.sql, seed.sql"]
+    PY["python/<br/>conftest.py, bench_pycubrid.py, bench_pymysql.py,<br/>bench_sqlalchemy.py, requirements.txt"]
+    GO["go/<br/>cubrid_bench_test.go, mysql_bench_test.go,<br/>gorm_bench_test.go, go.mod"]
+    TS["ts/<br/>bench_cubrid.ts, bench_mysql.ts, bench_drizzle.ts,<br/>package.json, tsconfig.json"]
+    SCRIPTS["scripts/<br/>wait_for_db.sh, normalize_results.py"]
+    MAKE["Makefile<br/>make tier0, make tier1-python, make all, etc."]
+    GH[".github/workflows/<br/>bench.yml<br/>Nightly CI + GitHub Pages publish"]
+    PRD["PRD.md"]
+    AGENTS["AGENTS.md"]
+    README["README.md"]
+    LICENSE["LICENSE"]
+    GITIGNORE[".gitignore"]
+
+    ROOT --> DOCKER
+    ROOT --> SCHEMA
+    ROOT --> PY
+    ROOT --> GO
+    ROOT --> TS
+    ROOT --> SCRIPTS
+    ROOT --> MAKE
+    ROOT --> GH
+    ROOT --> PRD
+    ROOT --> AGENTS
+    ROOT --> README
+    ROOT --> LICENSE
+    ROOT --> GITIGNORE
 ```
 
 ## Module Responsibilities

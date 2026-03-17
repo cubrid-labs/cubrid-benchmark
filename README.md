@@ -93,34 +93,52 @@ make tier1-go          # Go tier1
 
 ## Architecture
 
-```text
-┌──────────────────────────────────────┐
-│               Makefile               │
-│    up/down/seed/tier0/tier1/all      │
-└──────────────────┬───────────────────┘
-                   │
-         ┌─────────┴─────────┐
-         │                   │
-┌────────▼────────┐ ┌────────▼────────┐
-│ docker/compose  │ │    schema/      │
-│ CUBRID + MySQL  │ │ init + seed SQL │
-└────────┬────────┘ └────────┬────────┘
-         │                   │
-         └─────────┬─────────┘
-                   │
-    ┌──────────────┼──────────────┐
-    │              │              │
-┌───▼───┐   ┌─────▼─────┐   ┌───▼───┐
-│python/│   │typescript/│   │  go/  │
-│tier0+1│   │  tier0+1  │   │tier0+1│
-└───┬───┘   └─────┬─────┘   └───┬───┘
-    │              │              │
-    └──────────────┼──────────────┘
-                   │
-         ┌─────────▼─────────┐
-         │    results/*.json  │
-         │  + GitHub Actions  │
-         └───────────────────┘
+```mermaid
+flowchart TD
+    M["Makefile<br/>up/down/seed/tier0/tier1/all"]
+    D["docker/compose<br/>CUBRID + MySQL"]
+    S["schema/<br/>init + seed SQL"]
+    P["python/<br/>tier0 + tier1"]
+    T["typescript/<br/>tier0 + tier1"]
+    G["go/<br/>tier0 + tier1"]
+    R["results/*.json<br/>+ GitHub Actions"]
+
+    M --> D
+    M --> S
+    D --> P
+    D --> T
+    D --> G
+    S --> P
+    S --> T
+    S --> G
+    P --> R
+    T --> R
+    G --> R
+```
+
+### Benchmark Flow
+
+```mermaid
+flowchart LR
+    DB["Docker Compose<br/>CUBRID 11.2 + MySQL 8.0"] --> BR["Benchmark Runner"]
+    BR --> OPS["Operations<br/>INSERT, SELECT, UPDATE, DELETE, Batch"]
+    OPS --> JSON["Results JSON"]
+    JSON --> CHARTS["Comparison Charts"]
+```
+
+### Database Comparison Path
+
+```mermaid
+flowchart LR
+    SUITE["Benchmark Suite"]
+    CUBRID["CUBRID<br/>via pycubrid"]
+    MYSQL["MySQL<br/>via PyMySQL"]
+    COMPARE["Results Comparison"]
+
+    SUITE --> CUBRID
+    SUITE --> MYSQL
+    CUBRID --> COMPARE
+    MYSQL --> COMPARE
 ```
 
 ## Comparison Methodology
