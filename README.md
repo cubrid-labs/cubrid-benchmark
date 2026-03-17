@@ -1,7 +1,10 @@
 # CUBRID Benchmark Suite
 
+<!-- BADGES:START -->
 ![CI](https://github.com/cubrid-labs/cubrid-benchmark/actions/workflows/bench.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![GitHub stars](https://img.shields.io/github/stars/cubrid-labs/cubrid-benchmark)](https://github.com/cubrid-labs/cubrid-benchmark)
+<!-- BADGES:END -->
 
 Unified benchmark suite for CUBRID 11.2 vs MySQL 8.0 across Python, TypeScript, and Go drivers.
 
