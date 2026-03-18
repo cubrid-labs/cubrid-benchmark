@@ -79,6 +79,8 @@ jobs:
   nightly:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     services:
       cubrid:
         image: cubrid/cubrid:11.2
@@ -157,12 +159,17 @@ jobs:
       - name: Normalize benchmark result
         run: python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
 
+      - name: Save results and clean working tree
+        run: |
+          cp -r results/ /tmp/bench-results/
+          git checkout -- results/
+
       - name: Publish benchmark report
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Python Tier1 Benchmark
           tool: pytest
-          output-file-path: results/python_tier1.json
+          output-file-path: /tmp/bench-results/python_tier1.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           gh-pages-branch: gh-pages
