@@ -39,6 +39,13 @@ def _as_float(value: object, default: float = 0.0) -> float:
     return default
 
 
+def _approx_percentile_latency(mean: float, stddev: float, z_score: float) -> float:
+    estimate = mean + (z_score * stddev)
+    if estimate < 0:
+        return 0.0
+    return estimate
+
+
 def normalize(pytest_benchmark_json: Mapping[str, object]) -> list[dict[str, object]]:
     benchmarks = pytest_benchmark_json.get("benchmarks", [])
     output: list[dict[str, object]] = []
@@ -61,6 +68,8 @@ def normalize(pytest_benchmark_json: Mapping[str, object]) -> list[dict[str, obj
                 "unit": "ops/sec",
                 "value": round(_to_value(entry), 4),
                 "range": _to_percent(stddev, mean),
+                "p95_latency": round(_approx_percentile_latency(mean, stddev, 1.645), 9),
+                "p99_latency": round(_approx_percentile_latency(mean, stddev, 2.326), 9),
                 "extra": "language=python tier=1 framework=pytest-benchmark",
             }
         )

@@ -150,14 +150,25 @@ jobs:
       - name: Run Python Tier 1
         run: make tier1-python
 
+      - name: Run Python Tier 1 Extended
+        run: make tier1-python-extended
+
       - name: Run TypeScript Tier 1
         run: make tier1-ts
+
+      - name: Run TypeScript Tier 1 Extended
+        run: make tier1-ts-extended
 
       - name: Run Go Tier 1
         run: make tier1-go
 
+      - name: Run Go Tier 1 Extended
+        run: make tier1-go-extended
+
       - name: Normalize benchmark result
-        run: python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
+        run: |
+          python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
+          python3 scripts/normalize_results.py results/python_tier1_extended.json > results/normalized_python_tier1_extended.json
 
       - name: Save results and clean working tree
         run: |

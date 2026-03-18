@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "tier0": "vitest run --config vitest.config.ts bench_tier0*.test.ts",
-    "tier1": "vitest run --config vitest.config.ts bench_tier1*.test.ts",
+    "tier1": "vitest run --config vitest.config.ts bench_tier1_cubrid.test.ts bench_tier1_mysql.test.ts",
+    "tier1:extended": "vitest run --config vitest.config.ts bench_tier1_extended*.test.ts",
     "bench": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

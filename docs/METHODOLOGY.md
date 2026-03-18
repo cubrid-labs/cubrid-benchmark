@@ -44,6 +44,7 @@ flowchart TD
 - Range `SELECT` with filtering
 - `UPDATE` throughput
 - Mixed read/write workloads
+- Extended connection and concurrency workloads
 
 **Languages**: Python, TypeScript, Go
 
@@ -82,12 +83,20 @@ flowchart LR
     Ops --> Compare["CUBRID vs MySQL ratio"]
 ```
 
+### Secondary Metrics: Tail Latency and Memory
+
+- `p95_latency` and `p99_latency` are estimated from benchmark mean/stddev
+- Child-process peak RSS is captured for Python benchmark commands
+- Extended benchmark artifacts include both throughput and memory metadata
+
 ### Conversion Logic
 
 From `pytest-benchmark` output:
 1. If `stats.ops` is available → use directly
 2. If only `stats.mean` is available → compute `1 / mean`
 3. Include `stddev` as `+/- X%` range
+4. Approximate P95 latency: `mean + 1.645 * stddev`
+5. Approximate P99 latency: `mean + 2.326 * stddev`
 
 ### Result Format
 
@@ -98,9 +107,44 @@ Normalized results follow the `github-action-benchmark` schema:
     "unit": "ops/sec",
     "value": 95.4321,
     "range": "+/- 3.2%",
+    "p95_latency": 0.024112341,
+    "p99_latency": 0.028873441,
     "extra": "language=python tier=1 framework=pytest-benchmark"
 }
 ```
+
+## Extended Workloads
+
+Nightly Tier 1 extended runs include four additional workloads in Python, TypeScript, and Go.
+
+```mermaid
+flowchart LR
+    CD[connect_disconnect] --> PREP[prepared_statement]
+    PREP --> BATCH[batch_insert]
+    BATCH --> CONC[concurrent_select]
+```
+
+- `connect_disconnect`: 100 connect/ping/close cycles to isolate connection overhead
+- `prepared_statement`: Reuse one prepared cursor/statement for 1000 point-select operations
+- `batch_insert`: Insert 1000 rows with batched APIs (`executemany`/prepared statement loops)
+- `concurrent_select`: Four parallel workers executing point-select ranges
+
+## Memory Tracking
+
+Python extended Tier 1 runs are executed via `scripts/collect_metrics.py`, which wraps pytest and captures RSS from `resource.getrusage(resource.RUSAGE_CHILDREN)`.
+
+```mermaid
+flowchart TD
+    Start[collect_metrics.py starts] --> Before[Read RUSAGE_CHILDREN ru_maxrss]
+    Before --> Run[Run pytest benchmark subprocess]
+    Run --> After[Read RUSAGE_CHILDREN ru_maxrss again]
+    After --> Emit[Write *.metrics.json artifact with before/after/delta]
+```
+
+Metrics artifact fields:
+- `rusage_children_before_kb`
+- `rusage_children_after_kb`
+- `peak_rss_delta_kb`
 
 ## Language-Specific Drivers
 
@@ -172,11 +216,15 @@ make tier0-go
 
 # Run full benchmarks
 make tier1-python
+make tier1-python-extended
 make tier1-ts
+make tier1-ts-extended
 make tier1-go
+make tier1-go-extended
 
 # Normalize results
 python3 scripts/normalize_results.py results/python_tier1.json
+python3 scripts/normalize_results.py results/python_tier1_extended.json
 
 # Cleanup
 make clean
