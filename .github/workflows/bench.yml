@@ -77,7 +77,7 @@ jobs:
         run: make tier0-go
 
   nightly:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     services:
       cubrid:
