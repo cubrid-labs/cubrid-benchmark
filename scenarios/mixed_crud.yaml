@@ -1,0 +1,90 @@
+name: cubrid-vs-mysql-mixed-crud
+description: >
+  Mixed CRUD benchmark — CUBRID vs MySQL across Python, Go, and TypeScript.
+  Steps: INSERT, SELECT by PK, UPDATE by PK. Executed round-robin.
+
+setup:
+  queries:
+    - "DROP TABLE IF EXISTS bench_crud"
+    - "CREATE TABLE bench_crud (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100), amount INT)"
+
+teardown:
+  queries:
+    - "DROP TABLE IF EXISTS bench_crud"
+
+steps:
+  - name: insert-row
+    query: "INSERT INTO bench_crud (name, amount) VALUES (%(name)s, %(amount)s)"
+    params:
+      name: "random_choice(bench_a, bench_b, bench_c, bench_d, bench_e)"
+      amount: "random_int(1, 100000)"
+
+  - name: select-by-pk
+    query: "SELECT id, name, amount FROM bench_crud WHERE id = %(id)s"
+    params:
+      id: "random_int(1, 1000)"
+
+  - name: update-by-pk
+    query: "UPDATE bench_crud SET amount = %(amount)s WHERE id = %(id)s"
+    params:
+      id: "random_int(1, 1000)"
+      amount: "random_int(1, 100000)"
+
+load:
+  concurrency: 4
+  duration: 15
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 5
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  # --- Python ---
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: pymysql
+    stack_id: python+pymysql
+    language: python
+    driver: pymysql
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
+
+  # --- Go ---
+  - name: go-cubrid
+    stack_id: go+cubrid-go
+    language: go
+    driver: cubrid-go
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+    worker_config:
+      command: ["go", "run", "./go/cmd/benchflow_worker"]
+
+  - name: go-mysql
+    stack_id: go+mysql
+    language: go
+    driver: go-sql-driver/mysql
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
+    worker_config:
+      command: ["go", "run", "./go/cmd/benchflow_worker"]
+
+  # --- TypeScript ---
+  - name: ts-cubrid
+    stack_id: ts+cubrid-client
+    language: typescript
+    driver: cubrid-client
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+    worker_config:
+      command: ["npx", "tsx", "./typescript/benchflow_worker.ts"]
+
+  - name: ts-mysql
+    stack_id: ts+mysql2
+    language: typescript
+    driver: mysql2
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
+    worker_config:
+      command: ["npx", "tsx", "./typescript/benchflow_worker.ts"]
