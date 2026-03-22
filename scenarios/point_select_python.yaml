@@ -1,0 +1,38 @@
+name: cubrid-vs-mysql-point-select-python
+description: >
+  Point SELECT benchmark — CUBRID (pycubrid) vs MySQL (PyMySQL).
+  Uses bench_users table with pre-seeded 100 rows.
+  Each operation is a single SELECT by primary key with random id.
+
+# NOTE: setup/teardown are skipped — use the existing seeded bench_users table.
+# Run `make seed` before benchmarking to ensure data is ready.
+
+steps:
+  - name: select-by-pk
+    query: "SELECT id, name, email, age, created_at FROM bench_users WHERE id = %(id)s"
+    params:
+      id: "random_int(1, 100)"
+
+load:
+  concurrency: 4
+  duration: 15
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 3
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: pymysql
+    stack_id: python+pymysql
+    language: python
+    driver: pymysql
+    dsn: "mysql://root:bench@localhost:3306/benchdb"

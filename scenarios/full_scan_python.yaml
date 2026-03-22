@@ -1,0 +1,35 @@
+name: cubrid-vs-mysql-full-scan-python
+description: >
+  Full table scan benchmark — CUBRID (pycubrid) vs MySQL (PyMySQL).
+  Scans the entire bench_users table (100 rows) in each operation.
+
+# NOTE: uses the existing seeded bench_users table.
+# Run `make seed` before benchmarking.
+
+steps:
+  - name: select-full-scan
+    query: "SELECT id, name, email, age, created_at FROM bench_users"
+
+load:
+  concurrency: 1
+  duration: 15
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 3
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: pymysql
+    stack_id: python+pymysql
+    language: python
+    driver: pymysql
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
