@@ -1,0 +1,80 @@
+name: cubrid-vs-mysql-bulk-insert-batch
+description: >
+  Bulk INSERT benchmark — CUBRID vs MySQL across Python, Go, and TypeScript.
+  Each operation inserts a batch of rows into a dedicated table.
+  Uses explicit transactions (BEGIN/COMMIT).
+
+setup:
+  queries:
+    - "DROP TABLE IF EXISTS bench_bulk"
+    - "CREATE TABLE bench_bulk (id INT AUTO_INCREMENT PRIMARY KEY, k VARCHAR(64), v VARCHAR(255))"
+
+teardown:
+  queries:
+    - "DROP TABLE IF EXISTS bench_bulk"
+
+steps:
+  - name: bulk-insert-100
+    query: "INSERT INTO bench_bulk (k, v) VALUES (%(k)s, %(v)s)"
+    params:
+      k: "random_string(16)"
+      v: "random_string(64)"
+
+load:
+  concurrency: 1
+  duration: 15
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 3
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  # --- Python ---
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: pymysql
+    stack_id: python+pymysql
+    language: python
+    driver: pymysql
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
+
+  # --- Go ---
+  - name: go-cubrid
+    stack_id: go+cubrid-go
+    language: go
+    driver: cubrid-go
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+    worker_config:
+      command: ["./bin/benchflow_worker_go"]
+
+  - name: go-mysql
+    stack_id: go+mysql
+    language: go
+    driver: go-sql-driver/mysql
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
+    worker_config:
+      command: ["./bin/benchflow_worker_go"]
+
+  # --- TypeScript ---
+  - name: ts-cubrid
+    stack_id: ts+cubrid-client
+    language: typescript
+    driver: cubrid-client
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+    worker_config:
+      command: ["./typescript/node_modules/.bin/tsx", "./typescript/benchflow_worker.ts"]
+
+  - name: ts-mysql
+    stack_id: ts+mysql2
+    language: typescript
+    driver: mysql2
+    dsn: "mysql://root:bench@localhost:3306/benchdb"
+    worker_config:
+      command: ["./typescript/node_modules/.bin/tsx", "./typescript/benchflow_worker.ts"]
