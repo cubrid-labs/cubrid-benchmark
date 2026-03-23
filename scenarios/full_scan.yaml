@@ -42,7 +42,7 @@ targets:
     driver: cubrid-go
     dsn: "cubrid://dba:@localhost:33000/benchdb"
     worker_config:
-      command: ["go", "run", "./go/cmd/benchflow_worker"]
+      command: ["./bin/benchflow_worker_go"]
 
   - name: go-mysql
     stack_id: go+mysql
@@ -50,7 +50,7 @@ targets:
     driver: go-sql-driver/mysql
     dsn: "mysql://root:bench@localhost:3306/benchdb"
     worker_config:
-      command: ["go", "run", "./go/cmd/benchflow_worker"]
+      command: ["./bin/benchflow_worker_go"]
 
   # --- TypeScript ---
   - name: ts-cubrid
@@ -59,7 +59,7 @@ targets:
     driver: cubrid-client
     dsn: "cubrid://dba:@localhost:33000/benchdb"
     worker_config:
-      command: ["npx", "tsx", "./typescript/benchflow_worker.ts"]
+      command: ["./typescript/node_modules/.bin/tsx", "./typescript/benchflow_worker.ts"]
 
   - name: ts-mysql
     stack_id: ts+mysql2
@@ -67,4 +67,4 @@ targets:
     driver: mysql2
     dsn: "mysql://root:bench@localhost:3306/benchdb"
     worker_config:
-      command: ["npx", "tsx", "./typescript/benchflow_worker.ts"]
+      command: ["./typescript/node_modules/.bin/tsx", "./typescript/benchflow_worker.ts"]
