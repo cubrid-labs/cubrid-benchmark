@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774156546969,
+  "lastUpdate": 1774243558240,
   "repoUrl": "https://github.com/cubrid-labs/cubrid-benchmark",
   "entries": {
     "Python Tier1 Benchmark": [
@@ -644,6 +644,98 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.008399838573486815",
             "extra": "mean: 2.766693579599996 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Sisyphus",
+            "username": "sisyphus-dev-ai",
+            "email": "clio-agent@sisyphuslabs.ai"
+          },
+          "committer": {
+            "name": "Sisyphus",
+            "username": "sisyphus-dev-ai",
+            "email": "clio-agent@sisyphuslabs.ai"
+          },
+          "id": "0bcfc67777bea0c30ac0d3b785f30522e512db57",
+          "message": "chore: ignore bin/ directory for compiled worker binaries",
+          "timestamp": "2026-03-23T00:51:30Z",
+          "url": "https://github.com/cubrid-labs/cubrid-benchmark/commit/0bcfc67777bea0c30ac0d3b785f30522e512db57"
+        },
+        "date": 1774243557955,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "python/bench_pycubrid.py::test_bench_insert_sequential",
+            "value": 0.05591865985479641,
+            "unit": "iter/sec",
+            "range": "stddev: 0.03764025380565229",
+            "extra": "mean: 17.883118132599975 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_select_by_pk",
+            "value": 0.036125455251634186,
+            "unit": "iter/sec",
+            "range": "stddev: 0.02891179375001032",
+            "extra": "mean: 27.681312056399996 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_select_full_scan",
+            "value": 0.05598168782740773,
+            "unit": "iter/sec",
+            "range": "stddev: 0.02690334198594207",
+            "extra": "mean: 17.862984107999978 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_update_indexed",
+            "value": 0.053500241639239554,
+            "unit": "iter/sec",
+            "range": "stddev: 0.08341688785702812",
+            "extra": "mean: 18.691504362599993 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_delete_sequential",
+            "value": 0.053370568915839495,
+            "unit": "iter/sec",
+            "range": "stddev: 0.029892476852052954",
+            "extra": "mean: 18.736918498600016 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_insert_sequential",
+            "value": 0.4160530496821919,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00676356443190654",
+            "extra": "mean: 2.4035396466000294 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_select_by_pk",
+            "value": 0.1983775171991417,
+            "unit": "iter/sec",
+            "range": "stddev: 0.014758360731813004",
+            "extra": "mean: 5.040893817600045 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_select_full_scan",
+            "value": 0.40726828079169614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.006881254594278321",
+            "extra": "mean: 2.4553839499999413 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_update_indexed",
+            "value": 0.3826265851338999,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00839664526984262",
+            "extra": "mean: 2.6135141646000646 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_delete_sequential",
+            "value": 0.3833459426061973,
+            "unit": "iter/sec",
+            "range": "stddev: 0.008339823544151477",
+            "extra": "mean: 2.608609845199999 sec\nrounds: 5"
           }
         ]
       }
