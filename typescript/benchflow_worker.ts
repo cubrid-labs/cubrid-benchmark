@@ -418,13 +418,22 @@ async function main() {
   // Benchmark
   // Note: TypeScript is single-threaded, so concurrency > 1 means
   // we fire off multiple async operations concurrently.
+  // Each worker gets its own connection to avoid driver-level deadlocks
+  // (especially with cubrid-client which doesn't support concurrent queries on one connection).
   const benchStart = performance.now()
   const durationMs = input.duration_s * 1000
   const concurrency = Math.max(1, input.concurrency)
 
+  // Create per-worker connections (reuse the main conn for worker 0)
+  const workerConns: DBConn[] = [conn]
+  for (let w = 1; w < concurrency; w++) {
+    workerConns.push(await openConnection(parsed))
+  }
+
   const workerPromises: Promise<void>[] = []
   for (let w = 0; w < concurrency; w++) {
     const workerRng = createRNG(baseSeed + w * 1000)
+    const wConn = workerConns[w]
     workerPromises.push(
       (async () => {
         const deadline = performance.now() + durationMs
@@ -434,7 +443,7 @@ async function main() {
             const { sql, args } = translateQuery(s.rawQuery, resolved)
             const t0 = performance.now()
             try {
-              await conn.query(sql, args)
+              await wConn.query(sql, args)
               const latencyNs = Math.round((performance.now() - t0) * 1_000_000)
               const sec = Math.floor((performance.now() - benchStart) / 1000)
               collectors.get(s.name)!.record(latencyNs, sec)
@@ -460,7 +469,10 @@ async function main() {
     }
   }
 
-  await conn.close()
+  // Close all connections (worker 0's conn is the main conn)
+  for (const wc of workerConns) {
+    try { await wc.close() } catch { /* best-effort */ }
+  }
 
   // Output
   const outputSteps: OutputStep[] = input.steps.map((s) =>
