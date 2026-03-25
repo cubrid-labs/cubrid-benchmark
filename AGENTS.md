@@ -193,3 +193,32 @@ Examples:
 - No cross-language ranking (apples vs oranges)
 - No benchmark results in committed files (generated in CI only)
 - No `time.Sleep` in benchmarks (use proper warm-up)
+
+## Competition Context (공모전 — Performance Loop System)
+
+> This repo is the **measurement backbone** of the competition.
+> Timeline: 2026-03-25 ~ 2026-11-04
+> Board: [CUBRID Ecosystem Roadmap](https://github.com/orgs/cubrid-labs/projects/2)
+
+### Competition Role
+
+cubrid-benchmark provides the **before/after evidence** that proves the Performance Loop works.
+All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
+
+### Competition Issues on This Repo
+
+| Issue | Phase | Priority |
+|-------|-------|----------|
+| #7 Record competition baseline (BASELINE.md) | R0 | Must-Have |
+| #8 Add Tier 2 ORM benchmark scenarios | R1 | Must-Have |
+| #9 Document benchmark reproducibility policy | R1 | Must-Have |
+| #10 Complete regression detection compare script | R5 | Must-Have |
+| #11 Competition evidence pack (charts, demo) | R6 | Must-Have |
+| #6 Benchmark runbook and reproducibility controls | R1 | Must-Have |
+| #1 Add Rust benchmark | R4 | Nice-to-Have |
+
+### Key Current Results
+
+- Python (pycubrid): CUBRID 4.5-6× slower than MySQL ← **primary optimization target**
+- Go (cubrid-go): Nearly 1:1 with MySQL
+- TypeScript (cubrid-client): CUBRID faster than MySQL in some scenarios
