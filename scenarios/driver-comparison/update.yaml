@@ -1,0 +1,54 @@
+name: driver-compare-update
+description: >
+  UPDATE by indexed column — pycubrid (Pure Python) vs CUBRIDdb (C extension).
+  Same CUBRID 11.2 server, same CAS protocol, isolates driver implementation.
+
+setup:
+  queries:
+    - "DROP TABLE IF EXISTS bench_update"
+    - >
+      CREATE TABLE bench_update (
+        id INT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        amount INT NOT NULL
+      )
+    - |
+      INSERT INTO bench_update
+      SELECT ROWNUM, 'user_' || CAST(ROWNUM AS VARCHAR), MOD(ROWNUM, 10000)
+      FROM db_class
+      LIMIT 1000
+
+teardown:
+  queries:
+    - "DROP TABLE IF EXISTS bench_update"
+
+steps:
+  - name: update-by-pk
+    query: "UPDATE bench_update SET amount = %(amount)s WHERE id = %(id)s"
+    params:
+      id: "random_int(1, 1000)"
+      amount: "random_int(1, 10000)"
+
+load:
+  concurrency: 1
+  duration: 30
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 5
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: cubriddb
+    stack_id: python+cubriddb
+    language: python
+    driver: CUBRIDdb
+    dsn: "cubrid://dba:@localhost:33000/benchdb"

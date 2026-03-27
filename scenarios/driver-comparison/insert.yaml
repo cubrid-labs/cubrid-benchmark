@@ -1,0 +1,49 @@
+name: driver-compare-insert
+description: >
+  Single-row INSERT throughput — pycubrid (Pure Python) vs CUBRIDdb (C extension).
+  Same CUBRID 11.2 server, same CAS protocol, isolates driver implementation.
+
+setup:
+  queries:
+    - "DROP TABLE IF EXISTS bench_insert"
+    - >
+      CREATE TABLE bench_insert (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        amount INT NOT NULL
+      )
+
+teardown:
+  queries:
+    - "DROP TABLE IF EXISTS bench_insert"
+
+steps:
+  - name: insert-one-row
+    query: "INSERT INTO bench_insert (name, amount) VALUES (%(name)s, %(amount)s)"
+    params:
+      name: "random_choice('Alice','Bob','Charlie','Diana','Eve','Frank','Grace','Hank')"
+      amount: "random_int(1, 10000)"
+
+load:
+  concurrency: 1
+  duration: 30
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 5
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: cubriddb
+    stack_id: python+cubriddb
+    language: python
+    driver: CUBRIDdb
+    dsn: "cubrid://dba:@localhost:33000/benchdb"

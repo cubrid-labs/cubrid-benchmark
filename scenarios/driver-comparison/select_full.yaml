@@ -1,0 +1,51 @@
+name: driver-compare-select-full
+description: >
+  Full table scan SELECT — pycubrid (Pure Python) vs CUBRIDdb (C extension).
+  Same CUBRID 11.2 server, same CAS protocol, isolates driver implementation.
+
+setup:
+  queries:
+    - "DROP TABLE IF EXISTS bench_scan"
+    - >
+      CREATE TABLE bench_scan (
+        id INT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        amount INT NOT NULL
+      )
+    - |
+      INSERT INTO bench_scan
+      SELECT ROWNUM, 'user_' || CAST(ROWNUM AS VARCHAR), MOD(ROWNUM, 10000)
+      FROM db_class
+      LIMIT 10000
+
+teardown:
+  queries:
+    - "DROP TABLE IF EXISTS bench_scan"
+
+steps:
+  - name: select-full-scan
+    query: "SELECT id, name, amount FROM bench_scan"
+
+load:
+  concurrency: 1
+  duration: 30
+  warmup:
+    duration: 3
+
+experiment:
+  iterations: 5
+  seed: 42
+  pause_between: 2.0
+
+targets:
+  - name: pycubrid
+    stack_id: python+pycubrid
+    language: python
+    driver: pycubrid
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
+
+  - name: cubriddb
+    stack_id: python+cubriddb
+    language: python
+    driver: CUBRIDdb
+    dsn: "cubrid://dba:@localhost:33000/benchdb"
