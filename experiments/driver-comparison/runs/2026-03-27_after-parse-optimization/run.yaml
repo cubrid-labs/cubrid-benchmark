@@ -1,0 +1,47 @@
+run_id: "2026-03-27_after-parse-optimization"
+date: "2026-03-27"
+label: "after-parse-optimization"
+role: candidate
+compares_to: "2026-03-27_before-optimization"
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
+    cores: 4
+    memory_gb: 15.3
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.12.8"
+    cubrid_server: "11.2"
+    docker: "24.0.5"
+  drivers:
+    pycubrid: "0.5.0+16a8634"
+    pymysql: "1.1.1"
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+artifacts:
+  raw_dir: raw/
+  figures_dir: figures/
+  derived_dir: derived/
+
+changes:
+  commit: "16a8634"
+  summary: "perf: optimize fetch hot path — dispatch table, pre-compiled structs, slice-based fetch"
+  details:
+    - "packet.py: Pre-compiled struct.Struct objects at module level, removed typing.cast"
+    - "protocol.py: Replaced 15+ if/elif chain with _TYPE_READERS dict dispatch table"
+    - "protocol.py: Optimized _parse_row_data with pre-extracted column_type list and local-bound methods"
+    - "cursor.py: Replaced fetchall/fetchmany fetchone() loop with slice-based bulk fetch"
+
+notes: >
+  After-optimization candidate run. Measures the same workloads as the baseline
+  with pycubrid commit 16a8634 (dispatch table, pre-compiled structs, slice-based fetch).
+  Includes both phase-decomposed micro-benchmarks (comparable to baseline) and
+  tier1-python pytest-benchmark results (pycubrid vs PyMySQL cross-database comparison).

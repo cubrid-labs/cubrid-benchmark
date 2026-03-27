@@ -378,3 +378,98 @@ Earlier benchmark results showing pycubrid 2.46× slower on INSERT were caused b
 2. **fetchall bug**: pycubrid only returned first batch (~477 rows) — fixed in commit `bb687dc`
 
 Both issues have been corrected. The results in this document reflect the fixed state.
+
+---
+
+## Run History
+
+| Run ID | Date | Role | Label | pycubrid | Key Change |
+|--------|------|------|-------|----------|------------|
+| `2026-03-27_before-optimization` | 2026-03-27 | baseline | Before optimization | 0.5.0 (bb687dc) | Initial baseline |
+| `2026-03-27_after-parse-optimization` | 2026-03-27 | candidate | After parse optimization | 0.5.0+16a8634 | Dispatch table, pre-compiled structs, slice fetch |
+
+Comparable group: `devbox-i5-4200M-linux5.15-docker-cubrid112`
+
+---
+
+## After-Optimization Results (2026-03-27_after-parse-optimization)
+
+### Changes Applied
+
+Commit [`16a8634`](https://github.com/cubrid-labs/pycubrid/commit/16a8634):
+
+1. **packet.py**: Pre-compiled `struct.Struct` objects at module level; removed `typing.cast` overhead
+2. **protocol.py**: Replaced 15+ `if/elif` chain in `_read_value()` with `_TYPE_READERS` dict dispatch table (O(1) lookup); optimized `_parse_row_data()` with pre-extracted column types and local-bound methods
+3. **cursor.py**: Replaced `fetchall()`/`fetchmany()` `fetchone()` loop with slice-based bulk fetch
+
+### Phase-Decomposed Results (200 iterations, 50 warmup, 10K rows)
+
+| Phase | Before (ms) | After (ms) | Δ% | Assessment |
+|-------|------------|-----------|-----|------------|
+| **Connect** | 2.244 | 1.657 | **−26.2%** | Faster |
+| **INSERT execute** | 7.811 | 7.101 | **−9.1%** | Improved |
+| INSERT commit | 49.825 | 51.320 | +3.0% | Within noise (server-side) |
+| INSERT total | 57.636 | 58.421 | +1.4% | Commit-dominated, no net change |
+| **SELECT PK total** | 1.084 | 0.960 | **−11.4%** | Improved |
+| **SELECT 10K execute** | 14.894 | 13.582 | **−8.8%** | Improved |
+| **SELECT 10K fetch** | 96.047 | 77.772 | **−19.0%** | Primary target — significant speedup |
+| **SELECT 10K total** | 110.940 | 91.354 | **−17.7%** | Reduced from 2.82× to 2.32× vs CUBRIDdb |
+| **UPDATE execute** | 4.516 | 3.893 | **−13.8%** | Improved |
+| UPDATE commit | 47.082 | 46.648 | −0.9% | Within noise |
+| **DELETE execute** | 4.364 | 3.546 | **−18.7%** | Improved |
+| DELETE commit | 48.343 | 47.670 | −1.4% | Within noise |
+
+### Before vs After — All Phases
+
+![Before vs After Phases](runs/2026-03-27_after-parse-optimization/figures/before_after_phases.png)
+
+### SELECT 10K Breakdown (Primary Target)
+
+![SELECT 10K Before/After](runs/2026-03-27_after-parse-optimization/figures/select_10k_before_after.png)
+
+### Optimization Impact vs CUBRIDdb
+
+![Optimization Impact](runs/2026-03-27_after-parse-optimization/figures/optimization_impact.png)
+
+### Analysis
+
+The optimization delivered measurable improvements across all execute-phase operations:
+
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| SELECT 10K fetch time | 96.0ms | 77.8ms | **19.0% faster** |
+| SELECT 10K total | 110.9ms | 91.4ms | **17.7% faster** |
+| pycubrid / CUBRIDdb ratio | 2.82× | **2.32×** | Gap reduced by 18% |
+
+**Commit phases are unchanged** — as expected, since commit time is server-side I/O and not affected by client-side parsing optimizations.
+
+The 19% fetch speedup aligns with the cProfile prediction of 18–24% from eliminating `_parse_int` call overhead and `_read_value` dispatch overhead.
+
+### Remaining Gap
+
+| Component | Latency (ms) | Fraction of total |
+|-----------|-------------|-------------------|
+| Network + server (`execute`) | 13.6 | 14.9% |
+| **Python row parsing (`fetch`)** | **77.8** | **85.1%** |
+| Total | 91.4 | 100% |
+
+CUBRIDdb total: 39.4ms. Remaining gap: 2.32× (down from 2.82×).
+
+Further optimization opportunities:
+- Batch `struct.unpack` across multiple fields per row (reduce per-field call overhead)
+- C extension for the inner parse loop (would approach CUBRIDdb performance)
+- `memoryview` slicing optimizations in `_parse_row_data`
+
+### Tier1-Python Results (pycubrid vs PyMySQL, cross-database)
+
+These measure full end-to-end operations (10K rows per test, 5 rounds) comparing CUBRID + pycubrid against MySQL + PyMySQL:
+
+| Test | pycubrid (s) | PyMySQL (s) | Ratio |
+|------|-------------|-------------|-------|
+| INSERT 10K sequential | 19.63 | 2.65 | 7.4× |
+| SELECT 10K by PK | 29.89 | 5.94 | 5.0× |
+| SELECT 10K full scan | 19.55 | 2.82 | 6.9× |
+| UPDATE 10K indexed | 20.40 | 2.97 | 6.9× |
+| DELETE 10K sequential | 20.44 | 2.96 | 6.9× |
+
+These ratios reflect **database + driver combined overhead** (CUBRID server vs MySQL server + respective drivers). They are not directly comparable to the phase-decomposed results which isolate driver-only overhead on the same CUBRID server.

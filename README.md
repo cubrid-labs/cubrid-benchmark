@@ -15,6 +15,7 @@ Multi-language benchmark suite for CUBRID 11.2 vs MySQL 8.0 across Python, TypeS
 | 1 | Baseline (multi-language) | completed | CUBRID vs MySQL across Python/Go/TypeScript | 2026-03-16 | [Report](experiments/baseline-multilang/README.md) |
 | 2 | pycubrid vs PyMySQL | completed | Cross-database driver comparison | 2026-03-27 | [Report](experiments/benchforge-pycubrid-vs-pymysql/README.md) |
 | 3 | pycubrid vs CUBRIDdb | active | Same-database driver comparison, optimization targets | 2026-03-27 | [Report](experiments/driver-comparison/README.md) |
+| 4 | Row-count sweep | active | SELECT fetch scaling by result set size (100–10K rows) | 2026-03-27 | [Report](experiments/row-count-sweep/README.md) |
 
 ## Quick Start
 

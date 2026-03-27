@@ -1,0 +1,89 @@
+{
+  "compares_to": "2026-03-27_before-optimization",
+  "comparison": {
+    "connect": {
+      "before_ms": 2.244,
+      "after_ms": 1.6566,
+      "delta_pct": -26.18,
+      "improved": true
+    },
+    "insert_execute": {
+      "before_ms": 7.811,
+      "after_ms": 7.101,
+      "delta_pct": -9.09,
+      "improved": true
+    },
+    "insert_commit": {
+      "before_ms": 49.825,
+      "after_ms": 51.3203,
+      "delta_pct": 3.0,
+      "improved": false
+    },
+    "insert_total": {
+      "before_ms": 57.636,
+      "after_ms": 58.4212,
+      "delta_pct": 1.36,
+      "improved": false
+    },
+    "select_pk_total": {
+      "before_ms": 1.084,
+      "after_ms": 0.9604,
+      "delta_pct": -11.4,
+      "improved": true
+    },
+    "select_full_execute": {
+      "before_ms": 14.894,
+      "after_ms": 13.582,
+      "delta_pct": -8.81,
+      "improved": true
+    },
+    "select_full_fetch": {
+      "before_ms": 96.047,
+      "after_ms": 77.7723,
+      "delta_pct": -19.03,
+      "improved": true
+    },
+    "select_full_total": {
+      "before_ms": 110.94,
+      "after_ms": 91.3543,
+      "delta_pct": -17.65,
+      "improved": true
+    },
+    "update_execute": {
+      "before_ms": 4.516,
+      "after_ms": 3.8926,
+      "delta_pct": -13.8,
+      "improved": true
+    },
+    "update_commit": {
+      "before_ms": 47.082,
+      "after_ms": 46.6485,
+      "delta_pct": -0.92,
+      "improved": false
+    },
+    "update_total": {
+      "before_ms": 51.598,
+      "after_ms": 50.5411,
+      "delta_pct": -2.05,
+      "improved": true
+    },
+    "delete_execute": {
+      "before_ms": 4.364,
+      "after_ms": 3.5459,
+      "delta_pct": -18.75,
+      "improved": true
+    },
+    "delete_commit": {
+      "before_ms": 48.343,
+      "after_ms": 47.6697,
+      "delta_pct": -1.39,
+      "improved": true
+    },
+    "delete_total": {
+      "before_ms": 52.707,
+      "after_ms": 51.2156,
+      "delta_pct": -2.83,
+      "improved": true
+    }
+  }
+}

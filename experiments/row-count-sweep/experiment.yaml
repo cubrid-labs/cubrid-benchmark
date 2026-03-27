@@ -1,0 +1,17 @@
+id: row-count-sweep
+title: "pycubrid SELECT Fetch Scaling by Row Count"
+status: active
+question: "How does pycubrid fetch latency scale with result set size, and at what row count does the parsing overhead become dominant?"
+system_under_test: "pycubrid 0.5.0+16a8634 on CUBRID 11.2"
+workload:
+  name: "select-fetch-row-sweep"
+  schema: bench_users
+  dataset: "Variable: 100, 500, 1000, 5000, 10000 rows"
+protocol:
+  warmup: "50 iterations discarded"
+  measurement: "200 iterations per row count, time.perf_counter_ns()"
+  iterations: 200
+  metrics: [mean_ms, p50_ms, p95_ms, p99_ms, cv_pct]
+repro:
+  setup: "docker compose -f docker/compose.yml up -d"
+  run: "python scripts/row_count_sweep.py --output experiments/row-count-sweep/runs/<run-id>/raw/sweep.json"

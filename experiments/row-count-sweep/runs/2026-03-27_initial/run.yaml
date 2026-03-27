@@ -1,0 +1,36 @@
+run_id: "2026-03-27_initial"
+date: "2026-03-27"
+label: "initial"
+role: baseline
+compares_to: null
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
+    cores: 4
+    memory_gb: 15.3
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.12.8"
+    cubrid_server: "11.2"
+    docker: "24.0.5"
+  drivers:
+    pycubrid: "0.5.0+16a8634"
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+artifacts:
+  raw_dir: raw/
+  figures_dir: figures/
+  derived_dir: derived/
+
+notes: >
+  Row-count sweep measuring SELECT fetch latency at 100, 500, 1000, 5000, and 10000 rows.
+  Uses optimized pycubrid (commit 16a8634). This establishes the scaling curve for
+  identifying the crossover point where Python parsing overhead becomes dominant.
