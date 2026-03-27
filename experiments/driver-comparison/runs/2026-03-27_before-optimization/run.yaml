@@ -1,0 +1,33 @@
+run_id: "2026-03-27_before-optimization"
+date: "2026-03-27"
+label: "before-optimization"
+role: baseline
+compares_to: null
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50 GHz"
+    cores: 4
+    memory_gb: 0
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.12.8"
+    cubrid_server: "11.2"
+    docker: "Docker"
+  drivers:
+    pycubrid: "0.5.0"
+    CUBRIDdb: "9.3.0.1"
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+artifacts:
+  raw_dir: raw/
+  figures_dir: figures/
+
+notes: "Same-database driver comparison before pycubrid parsing-path optimization."

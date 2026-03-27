@@ -25,6 +25,7 @@ flowchart TD
     SCRIPTS["scripts/<br/>wait_for_db.sh, normalize_results.py"]
     MAKE["Makefile<br/>make tier0, make tier1-python, make all, etc."]
     GH[".github/workflows/<br/>bench.yml<br/>Nightly CI + GitHub Pages publish"]
+    EXP["experiments/<br/>_template/, baseline-multilang/,<br/>benchforge-pycubrid-vs-pymysql/,<br/>driver-comparison/"]
     PRD["PRD.md"]
     AGENTS["AGENTS.md"]
     README["README.md"]
@@ -39,6 +40,7 @@ flowchart TD
     ROOT --> SCRIPTS
     ROOT --> MAKE
     ROOT --> GH
+    ROOT --> EXP
     ROOT --> PRD
     ROOT --> AGENTS
     ROOT --> README
@@ -55,9 +57,147 @@ flowchart TD
 | `python/` | pytest-benchmark based benchmarks for pycubrid, PyMySQL, SQLAlchemy |
 | `go/` | `go test -bench` based benchmarks for cubrid-go, go-sql-driver/mysql, GORM |
 | `ts/` | tinybench based benchmarks for cubrid-client, mysql2, Drizzle |
+| `experiments/` | Self-contained experiment folders with metadata, raw data, and reports |
 | `scripts/normalize_results.py` | Parse pytest-benchmark JSON, Go benchstat, tinybench output → unified JSON |
 | `Makefile` | Orchestrate benchmark tiers and database lifecycle |
 | `.github/workflows/bench.yml` | Nightly CI: start DBs → run benchmarks → publish to GitHub Pages |
+
+## Experiment Structure
+
+All benchmark results live under `experiments/`. Each experiment is a self-contained folder
+with a fixed definition and one or more immutable runs.
+
+### Directory Layout
+
+```
+experiments/
+├── _template/                              # Copy this to start a new experiment
+│   ├── README.md                           # Report template
+│   ├── experiment.yaml                     # Experiment definition
+│   └── runs/
+│       └── _template/
+│           └── run.yaml                    # Run metadata template
+├── <experiment-slug>/
+│   ├── README.md                           # Rolling report + run history
+│   ├── experiment.yaml                     # Fixed experiment definition
+│   └── runs/
+│       └── <YYYY-MM-DD_label>/             # One folder per execution
+│           ├── run.yaml                    # Environment, conditions, comparable_group
+│           ├── raw/                        # Raw JSON, CSV — original measurement output
+│           ├── derived/                    # summary.json, metrics.csv (optional)
+│           └── figures/                    # Charts for this run (optional)
+```
+
+### Naming Conventions
+
+- **Experiment slug**: lowercase, hyphenated, descriptive (e.g. `driver-comparison`, `baseline-multilang`)
+- **Run ID**: `YYYY-MM-DD_label` (e.g. `2026-03-27_before-optimization`, `2026-04-15_after-parse-int-fix`)
+- Run IDs must sort chronologically
+
+### experiment.yaml — Experiment Definition
+
+Defines WHAT is being measured. Fixed for the lifetime of the experiment.
+
+```yaml
+id: driver-comparison                       # Must match folder name
+title: "pycubrid vs CUBRIDdb"
+status: active                              # active | completed | archived
+question: "What is the performance gap between pycubrid and CUBRIDdb?"
+system_under_test: "pycubrid"
+workload:
+  name: "tier1"
+  schema: default
+  dataset: benchmark-default
+protocol:
+  warmup: "30-50 iterations discarded"
+  measurement: "200 iterations, time.perf_counter_ns()"
+  iterations: 5
+  metrics: [throughput, p50_ms, p95_ms, p99_ms]
+repro:
+  setup: "docker compose up -d"
+  run: "command to reproduce"
+```
+
+### run.yaml — Run Metadata
+
+Defines the CONDITIONS of a specific execution. Every run gets one.
+
+```yaml
+run_id: "2026-03-27_before-optimization"
+date: "2026-03-27T00:00:00Z"
+label: "before-optimization"
+role: baseline                              # baseline | candidate
+compares_to: null                           # run_id of baseline (if role=candidate)
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
+    cores: 4
+    memory_gb: 15.3
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.12.8"
+    cubrid_server: "11.2"
+    docker: "24.0.5"
+  drivers:
+    pycubrid: "0.5.0"
+    cubriddb: "9.3.0.1"
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+artifacts:
+  raw_dir: raw/
+  figures_dir: figures/
+
+notes: ""
+```
+
+### Comparable Groups and Before/After Comparisons
+
+The Performance Loop requires before/after evidence: measure → optimize → re-measure.
+Comparisons are only valid between runs in the **same comparable group**.
+
+**Rules:**
+
+1. A `comparable_group` is a string identifying: machine + CPU + OS + Docker + DB version
+2. Runs with the same `comparable_group` can be compared directly
+3. If hardware or DB version changes, start a new comparable group with a new baseline
+4. The first run in a group has `role: baseline`. Subsequent runs have `role: candidate` with `compares_to: <baseline-run-id>`
+5. **Never overwrite a run folder** — every execution creates a new immutable run
+
+**Example lifecycle:**
+
+```
+runs/
+├── 2026-03-27_before-optimization/     # role: baseline
+├── 2026-04-10_after-parse-int-fix/     # role: candidate, compares_to: 2026-03-27_before-optimization
+├── 2026-04-20_after-dispatch-table/    # role: candidate, compares_to: 2026-03-27_before-optimization
+└── 2026-05-01_new-machine-baseline/    # role: baseline (new comparable_group)
+```
+
+### Adding a New Experiment
+
+1. Copy `experiments/_template/` to `experiments/<new-slug>/`
+2. Fill in `experiment.yaml` with the experiment definition
+3. Create first run folder: `runs/YYYY-MM-DD_label/`
+4. Fill in `run.yaml` with environment and conditions
+5. Place raw data in `raw/`, charts in `figures/`
+6. Write results in `README.md` with run history table
+7. Add a row to the root `README.md` experiments table
+
+### Adding a New Run to an Existing Experiment
+
+1. Create new run folder: `runs/YYYY-MM-DD_label/`
+2. Fill in `run.yaml` — set `compares_to` if this is a candidate run
+3. Verify `comparable_group` matches the baseline you're comparing against
+4. Place raw data and charts
+5. Update experiment `README.md` run history table and conclusion
 
 ## Development
 
@@ -191,7 +331,7 @@ Examples:
 ## Anti-Patterns
 - No hardcoded absolute performance expectations (hardware varies)
 - No cross-language ranking (apples vs oranges)
-- No benchmark results in committed files (generated in CI only)
+- No benchmark results in committed files outside `experiments/**/runs/**` (raw data as evidence is allowed in experiment run folders)
 - No `time.Sleep` in benchmarks (use proper warm-up)
 
 ## Project Context — Performance Loop System

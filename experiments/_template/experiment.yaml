@@ -1,0 +1,17 @@
+id: experiment-slug
+title: "Experiment Title"
+status: active  # active | completed | archived
+question: "What question does this experiment answer?"
+system_under_test: "component name"
+workload:
+  name: "workload name"
+  schema: default
+  dataset: benchmark-default
+protocol:
+  warmup: "description"
+  measurement: "description"
+  iterations: 5
+  metrics: [throughput, p50_ms, p95_ms, p99_ms]
+repro:
+  setup: "docker compose up -d"
+  run: "command to run"

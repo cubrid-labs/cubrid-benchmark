@@ -1,0 +1,31 @@
+run_id: "YYYY-MM-DD_label"
+date: "ISO 8601"
+label: "descriptive-label"
+role: baseline  # baseline | candidate
+compares_to: null  # run_id of baseline if this is candidate
+comparable_group: "machine-cpu-docker-dbversion"
+
+environment:
+  host:
+    hostname: ""
+    cpu: ""
+    cores: 0
+    memory_gb: 0
+    os: ""
+    kernel: ""
+  software:
+    python: ""
+    cubrid_server: ""
+    docker: ""
+  drivers: {}
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+artifacts:
+  raw_dir: raw/
+  figures_dir: figures/  # optional
+
+notes: ""

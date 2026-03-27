@@ -1,0 +1,17 @@
+id: baseline-multilang
+title: "Baseline (multi-language)"
+status: completed
+question: "How does CUBRID 11.2 compare to MySQL 8.0 across Python, TypeScript, and Go Tier 1 driver throughput scenarios?"
+system_under_test: "CUBRID 11.2 vs MySQL 8.0 with language-specific drivers"
+workload:
+  name: "tier1-driver-throughput"
+  schema: bench_users + bench_products
+  dataset: deterministic benchdb seed
+protocol:
+  warmup: "pytest-benchmark calibration, tinybench 1 warmup round, Go runtime auto-warmup"
+  measurement: "Python 5 rounds x 1 iteration, TypeScript 3 rounds, Go benchtime 5x"
+  iterations: 5
+  metrics: [throughput, p50_ms, p95_ms, p99_ms]
+repro:
+  setup: "make up && make seed"
+  run: "make tier0 && make tier1-python && make tier1-ts && make tier1-go"

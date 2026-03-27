@@ -7,40 +7,14 @@
 <!-- BADGES:END -->
 
 Multi-language benchmark suite for CUBRID 11.2 vs MySQL 8.0 across Python, TypeScript, and Go.
-The current primary study is **pycubrid vs CUBRIDdb** — measuring and closing the performance gap
-between a pure-Python driver and the legacy C extension driver for CUBRID.
 
-## Summary: pycubrid vs CUBRIDdb
+## Experiments
 
-> Same database, same protocol, different driver implementation.
-
-![Latency Comparison](docs/images/driver_comparison.png)
-
-| Scenario | pycubrid | CUBRIDdb | Ratio | Source |
-|----------|:---:|:---:|:---:|---|
-| Connect | 2.24 ms | 10.01 ms | 0.22× | [Phase-decomposed](DRIVER_COMPARISON.md#connect) |
-| SELECT PK (1 row) | 1.12 ms | 2.22 ms | 0.50× | [Benchforge](DRIVER_COMPARISON.md#benchforge-validated-results-statistical) |
-| UPDATE (1 row) | 1.00 ms | 1.48 ms | 0.67× | [Benchforge](DRIVER_COMPARISON.md#benchforge-validated-results-statistical) |
-| INSERT (1 row) | 1.93 ms | 1.43 ms | 1.35× | [Benchforge](DRIVER_COMPARISON.md#benchforge-validated-results-statistical) |
-| SELECT (100 rows) | 1.84 ms | 1.75 ms | 1.05× | [Benchforge](DRIVER_COMPARISON.md#benchforge-validated-results-statistical) |
-| **SELECT (10K rows)** | **110.94 ms** | **39.36 ms** | **2.82×** | [Phase-decomposed](DRIVER_COMPARISON.md#select-full-scan-10000-rows) |
-
-pycubrid is faster or at parity for all operations except **bulk row fetch (10K+ rows)**,
-where Python-side row parsing is 2.82× slower. This is the sole optimization target.
-
-![Hot Path Profile](docs/images/hotspot_profile.png)
-
-The top three functions in the fetch path — `_parse_row_data`, `_parse_int`, `_read_value` —
-account for 50.7% of total execution time. The bottleneck is CPU-bound, not I/O-bound.
-See [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md) for full profiling data and optimization plan.
-
-## Experiment Reports
-
-| Report | Description |
-|---|---|
-| [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md) | pycubrid vs CUBRIDdb — phase decomposition, profiling, optimization targets |
-| [BENCHFORGE_RESULTS.md](BENCHFORGE_RESULTS.md) | pycubrid vs PyMySQL (cross-database) — benchforge statistical validation |
-| [BASELINE.md](BASELINE.md) | Multi-language baseline (Python, TypeScript, Go) — initial reference point |
+| # | Experiment | Status | Question | Latest Run | Report |
+|---|---|---|---|---|---|
+| 1 | Baseline (multi-language) | completed | CUBRID vs MySQL across Python/Go/TypeScript | 2026-03-16 | [Report](experiments/baseline-multilang/README.md) |
+| 2 | pycubrid vs PyMySQL | completed | Cross-database driver comparison | 2026-03-27 | [Report](experiments/benchforge-pycubrid-vs-pymysql/README.md) |
+| 3 | pycubrid vs CUBRIDdb | active | Same-database driver comparison, optimization targets | 2026-03-27 | [Report](experiments/driver-comparison/README.md) |
 
 ## Quick Start
 

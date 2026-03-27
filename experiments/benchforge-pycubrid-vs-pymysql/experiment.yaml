@@ -1,0 +1,17 @@
+id: benchforge-pycubrid-vs-pymysql
+title: "pycubrid vs PyMySQL (benchforge)"
+status: completed
+question: "How does pycubrid on CUBRID 11.2 compare to PyMySQL on MySQL 8.0 under benchforge's fixed-duration latency/throughput protocol?"
+system_under_test: "pycubrid 0.5.0 (CUBRID 11.2) vs PyMySQL 1.1.2 (MySQL 8.0)"
+workload:
+  name: "benchforge-cross-database-driver-comparison"
+  schema: bench_users benchmark table
+  dataset: 1000 pre-seeded rows
+protocol:
+  warmup: "3s warmup per iteration"
+  measurement: "5 iterations x 30s, concurrency=1, seed=42"
+  iterations: 5
+  metrics: [throughput, p50_ms, p95_ms, p99_ms]
+repro:
+  setup: "docker compose -f docker/compose.yml up -d"
+  run: "bench run scenarios/benchforge/cubrid_mysql_*.yaml -o results/benchforge/*.json --iterations 5"

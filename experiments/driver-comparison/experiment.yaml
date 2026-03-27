@@ -1,0 +1,17 @@
+id: driver-comparison
+title: "pycubrid vs CUBRIDdb"
+status: active
+question: "On the same CUBRID 11.2 server, where is pycubrid slower or faster than CUBRIDdb, and which phases should be optimized first?"
+system_under_test: "pycubrid 0.5.0 vs CUBRIDdb 9.3.0.1 on CUBRID 11.2"
+workload:
+  name: "same-database-driver-phase-comparison"
+  schema: bench_users
+  dataset: 100-row and 10,000-row CUBRID datasets by scenario
+protocol:
+  warmup: "30-50 discarded iterations (phase-decomposed) and 5s benchforge warmup"
+  measurement: "phase-decomposed 200 iterations + benchforge 5 iterations x 30s"
+  iterations: 5
+  metrics: [throughput, p50_ms, p95_ms, p99_ms]
+repro:
+  setup: "docker compose -f docker/compose.yml up -d"
+  run: "python benchmarks plus benchforge scenarios for pycubrid and CUBRIDdb"
