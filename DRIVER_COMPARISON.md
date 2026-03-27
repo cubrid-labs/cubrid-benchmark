@@ -2,6 +2,7 @@
 
 > **Date**: 2026-03-27
 > **Purpose**: Compare pycubrid (pure Python) against CUBRIDdb (C extension) to identify optimization targets.
+> **Status**: This is the primary benchmark document for the current [pycubrid optimization effort](README.md#current-focus-pycubrid-optimization).
 
 ## Overview
 
@@ -50,7 +51,7 @@ All benchmarks explicitly set `conn.autocommit` for both drivers to ensure fair 
 | CUBRIDdb, autocommit=OFF | 51.427 | 55.224 | 56.540 | 16.3 |
 
 **Finding**: Autocommit ON/OFF makes negligible difference (1–2%) for both drivers.
-Server-side commit cost dominates regardless of the autocommit mode.
+Server-side commit cost accounts for the majority of total latency regardless of autocommit mode.
 
 | Comparison | Ratio (mean) |
 |------------|-------------|
@@ -101,6 +102,11 @@ Virtually identical. Single-row fetch is trivial for both.
 
 **The largest gap.** Fetch phase is 3.28× slower — this is the primary optimization target.
 
+![SELECT 10K ECDF](docs/images/select_10k_ecdf.png)
+
+The empirical CDF above shows the full latency distribution for SELECT 10K rows.
+The gap is consistent across all percentiles, confirming a systematic overhead rather than tail-latency spikes.
+
 #### UPDATE (single row)
 
 | Phase | pycubrid (ms) | CUBRIDdb (ms) | Ratio |
@@ -109,7 +115,7 @@ Virtually identical. Single-row fetch is trivial for both.
 | commit | 47.082 | 47.753 | 0.99× |
 | **total** | **51.598** | **52.032** | **0.99×** |
 
-Tie. Commit dominates.
+Tie — commit dominates.
 
 #### DELETE (single row)
 
@@ -119,18 +125,18 @@ Tie. Commit dominates.
 | commit | 48.343 | 48.867 | 0.99× |
 | **total** | **52.707** | **53.200** | **0.99×** |
 
-Tie. Commit dominates.
+Tie — commit dominates.
 
 ### 3. Summary
 
 | Scenario | Ratio (pycubrid / CUBRIDdb) | Assessment |
 |----------|---------------------------|------------|
-| Connect | 0.22× | **pycubrid wins** (4.5× faster) |
-| INSERT total | 1.10× | Near parity (commit-dominated) |
-| SELECT PK | 1.06× | Near parity |
-| SELECT 10K | 2.82× | **Primary optimization target** |
-| UPDATE | 0.99× | Parity |
-| DELETE | 0.99× | Parity |
+| Connect | 0.22× | pycubrid 4.5× faster |
+| INSERT total | 1.10× | Commit-dominated (commit ≈ 86% of total) |
+| SELECT PK | 1.06× | Within measurement noise |
+| SELECT 10K | 2.82× | Largest gap — fetch phase 3.28× slower |
+| UPDATE | 0.99× | Within measurement noise |
+| DELETE | 0.99× | Within measurement noise |
 
 For write operations (INSERT/UPDATE/DELETE), server-side commit (~50ms) accounts for 85–95% of total latency, making the driver overhead negligible.
 
@@ -209,12 +215,12 @@ statistically rigorous methodology:
 
 ### Per-Operation Comparison
 
-| Scenario | pycubrid p50 (ms) | CUBRIDdb p50 (ms) | Ratio | Winner | CV% (py / cu) |
-|----------|------------------:|-------------------:|------:|--------|---------------|
-| SELECT PK (1 row) | 1.117 | 2.217 | 0.50× | **pycubrid 1.98× faster** | 0.2% / 2.1% |
-| SELECT Full (100 rows) | 1.836 | 1.748 | 1.05× | CUBRIDdb ~5% faster | 0.6% / 0.3% |
+| Scenario | pycubrid p50 (ms) | CUBRIDdb p50 (ms) | Ratio | Note | CV% (py / cu) |
+|----------|------------------:|-------------------:|------:|------|---------------|
+| SELECT PK (1 row) | 1.117 | 2.217 | 0.50× | pycubrid 1.98× faster | 0.2% / 2.1% |
+| SELECT Full (100 rows) | 1.836 | 1.748 | 1.05× | CUBRIDdb 5% faster | 0.6% / 0.3% |
 | INSERT (1 row) | 1.928 | 1.432 | 1.35× | CUBRIDdb 1.35× faster | 0.2% / 0.4% |
-| UPDATE (1 row) | 0.998 | 1.484 | 0.67× | **pycubrid 1.49× faster** | 0.2% / 0.2% |
+| UPDATE (1 row) | 0.998 | 1.484 | 0.67× | pycubrid 1.49× faster | 0.2% / 0.2% |
 
 ### Detailed Latency Breakdown
 
@@ -231,14 +237,14 @@ statistically rigorous methodology:
 
 ### Key Observations
 
-1. **pycubrid wins on SELECT PK and UPDATE** — Pure Python beats C extension due to lighter
-   cursor/connection management overhead. CUBRIDdb's C extension (`_cubrid.so`) has significant
-   setup cost per operation that only amortizes with larger data volumes.
+1. **pycubrid is faster on SELECT PK and UPDATE** — pure Python has lighter cursor/connection
+   management overhead per operation. CUBRIDdb's C extension (`_cubrid.so`) has setup cost
+   that only amortizes with larger data volumes.
 
-2. **CUBRIDdb wins on INSERT** — The C-level parameter binding in CUBRIDdb is 35% faster for
-   write operations that require protocol serialization.
+2. **CUBRIDdb is faster on INSERT** — C-level parameter binding is 35% faster for write
+   operations that require protocol serialization.
 
-3. **SELECT Full (100 rows) is near-parity** — The parsing bottleneck only appears with
+3. **SELECT Full (100 rows) shows minimal difference** — the parsing bottleneck only appears with
    larger result sets (10K+ rows, see Phase-Decomposed results above). At 100 rows,
    Python's parsing overhead is negligible.
 
@@ -256,8 +262,8 @@ The benchforge results differ from the Phase-Decomposed results above because:
   This isolates **pure driver overhead** without server-side commit latency (~50ms).
 - **Phase-Decomposed measured execute + commit** — commit dominated total time (85–95%),
   masking driver differences.
-- This explains why INSERT shows a larger gap (1.35×) in benchforge vs near-parity (1.10×)
-  in Phase-Decomposed: without commit, the execute-phase-only gap is exposed.
+- This explains why INSERT shows a larger gap (1.35×) in benchforge vs 1.10× in
+   Phase-Decomposed: without commit, the execute-phase-only gap is exposed.
 - For SELECT, benchforge's 100-row scan (1.05× gap) aligns with Phase-Decomposed single-row
   results. The large gap (2.82×) only appears at 10K+ rows, confirming that pycubrid's
   bottleneck is specifically in bulk row parsing.
@@ -274,6 +280,92 @@ Given both sets of results, the optimization priorities for pycubrid are:
 
 The primary optimization target remains **bulk row parsing** (`_parse_row_data` → `_read_value`
 → `_parse_int` hot path), which accounts for 50.7% of SELECT 10K execution time.
+
+## Reproducibility
+
+### Software Versions
+
+| Component | Version | Source |
+|-----------|---------|--------|
+| pycubrid | v0.5.0 | `pip install pycubrid` (includes fetchall fix [`bb687dc`](https://github.com/cubrid-labs/pycubrid/commit/bb687dc)) |
+| CUBRIDdb | v9.3.0.1 | `pip install CUBRIDdb` |
+| CUBRID Server | 11.2 | Docker `benchforge-cubrid-1`, port 33000 |
+| Python | CPython 3.12.8 | |
+| benchforge | v0.1.0 | [`yeongseon/benchforge`](https://github.com/yeongseon/benchforge) |
+
+### Connection Parameters
+
+```
+host      = localhost
+port      = 33000
+database  = benchdb
+user      = dba
+password  = (empty)
+autocommit = OFF (explicitly set for both drivers)
+connection = single, reused across iterations
+threading  = single thread, sequential operations
+```
+
+### Phase-Decomposed Measurement
+
+```
+iterations = 200 (per scenario)
+warmup     = 30–50 iterations discarded
+timer      = time.perf_counter_ns()
+statistics = mean, stdev, p50, p95, p99, CV%
+```
+
+### Benchforge Measurement
+
+```
+iterations = 5
+duration   = 30s per iteration
+warmup     = 5s per iteration
+pause      = 2.0s between iterations
+concurrency = 1
+seed       = 42 (deterministic)
+```
+
+### Query Text
+
+| Scenario | SQL |
+|----------|-----|
+| INSERT | `INSERT INTO bench_users (name, email, age) VALUES (?, ?, ?)` |
+| SELECT PK | `SELECT * FROM bench_users WHERE id = ?` |
+| SELECT 10K | `SELECT * FROM bench_users` (10,000 rows) |
+| UPDATE | `UPDATE bench_users SET age = ? WHERE id = ?` |
+| DELETE | `DELETE FROM bench_users WHERE id = ?` |
+
+### Raw Data
+
+- Phase-decomposed: collected via inline `time.perf_counter_ns()` instrumentation
+- Benchforge JSON: `results/benchforge/*.json`
+
+## Threats to Validity
+
+1. **Docker-on-localhost**: The CUBRID server runs in a Docker container on the same host.
+   This eliminates network latency but introduces container overhead (namespace, cgroup).
+   Real deployments with network separation would show larger absolute latencies for both drivers.
+
+2. **Single-thread, single-connection**: All measurements use one connection with sequential operations.
+   Concurrency behavior (connection pool overhead, GIL contention, CAS broker multiplexing)
+   is not captured. The relative driver overhead may change under concurrent load.
+
+3. **Row count disparity across experiments**: Benchforge uses 100-row tables; phase-decomposed
+   uses 10,000-row tables. The 2.82× gap appears only at 10K rows. Intermediate row counts
+   (500, 1K, 5K) have not been tested — the exact crossover point is unknown.
+
+4. **Execute-only vs execute+commit**: Benchforge measures `execute()` without explicit `commit()`.
+   Phase-decomposed measures `execute() + commit()`. This is intentional (isolating driver overhead
+   vs total latency), but the two result sets are not directly comparable.
+
+5. **CUBRIDdb `BaseCursor.__del__` exceptions**: CUBRIDdb emits harmless `Exception ignored in:
+   <function BaseCursor.__del__>` warnings during garbage collection. These do not affect
+   measurement but indicate incomplete resource cleanup in the C extension.
+
+6. **Estimated percentiles in BASELINE.md**: The initial baseline estimated p95/p99 as
+   `mean ± k×stddev` (normal approximation), which is unreliable for skewed latency distributions.
+   The phase-decomposed and benchforge results in this document use real measured percentiles.
 
 ## Previous Results (Invalidated)
 

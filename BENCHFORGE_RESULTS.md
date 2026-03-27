@@ -1,5 +1,9 @@
 # BenchForge Results: pycubrid (CUBRID 11.2) vs PyMySQL (MySQL 8.0)
 
+> **Note**: This document compares pycubrid against PyMySQL (cross-database). For the
+> current optimization focus (pycubrid vs CUBRIDdb, same-database driver comparison),
+> see [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md) and [README.md](README.md).
+
 **Generated**: 2026-03-27  
 **Platform**: BenchForge v0.1.0 (research-grade, HDR histogram-based measurement)  
 **Methodology**: 5 iterations × 30s duration × 3s warmup, concurrency=1, seed=42
@@ -20,11 +24,11 @@
 
 ## Summary
 
-| Scenario | pycubrid ops/s | PyMySQL ops/s | Ratio | Winner | p50 cubrid | p50 mysql |
+| Scenario | pycubrid ops/s | PyMySQL ops/s | Ratio | Faster | p50 cubrid | p50 mysql |
 |---|---:|---:|---:|---|---:|---:|
 | INSERT Sequential | 470.7 | 3,334.7 | 7.1× | PyMySQL | 2.066 ms | 0.241 ms |
 | SELECT by PK | 864.3 | 3,093.1 | 3.6× | PyMySQL | 1.104 ms | 0.297 ms |
-| SELECT Full Scan (1K rows) | 183.6 | 117.0 | 0.6× | **pycubrid** | 5.225 ms | 8.003 ms |
+| SELECT Full Scan (1K rows) | 183.6 | 117.0 | 0.6× | pycubrid | 5.225 ms | 8.003 ms |
 | UPDATE Indexed | 955.1 | 3,271.9 | 3.4× | PyMySQL | 0.993 ms | 0.266 ms |
 | DELETE Sequential | 1,073.0 | 4,507.0 | 4.2× | PyMySQL | 0.880 ms | 0.202 ms |
 
@@ -34,7 +38,7 @@
 
 1. **pycubrid has 3.4×–7.1× higher latency on single-row operations** — INSERT, SELECT by PK, UPDATE, and DELETE all show pycubrid at ~1–2 ms p50 vs PyMySQL at ~0.2–0.3 ms p50. This is a **driver-level overhead**, not just a database-level difference.
 
-2. **pycubrid wins on bulk reads (full table scan)** — When fetching 1,000 rows, pycubrid (CUBRID) is 1.6× faster than PyMySQL (MySQL). CUBRID returns large result sets more efficiently through the pycubrid driver.
+2. **pycubrid is faster on bulk reads (full table scan)** — When fetching 1,000 rows, pycubrid (CUBRID) is 1.6× faster than PyMySQL (MySQL). CUBRID returns large result sets more efficiently through the pycubrid driver.
 
 3. **Extremely low variance across iterations** — All scenarios show CoV < 1.5%, confirming reproducible, stable measurements. The benchforge platform's warmup phase and seed-based determinism work effectively.
 
@@ -210,10 +214,11 @@ pycubrid's 1.6× advantage on full table scans (1,000 rows) likely stems from:
 
 ### Next Steps
 
-1. **Connector-vs-connector comparison**: Run pycubrid vs sqlalchemy-cubrid against the same CUBRID instance to isolate driver overhead from database overhead
-2. **Vary row counts**: Test SELECT with 10, 100, 1K, 10K rows to find the exact crossover point
-3. **Connection pooling**: Test with concurrency > 1 to see if the driver overhead is amplified under contention
-4. **Profile pycubrid internals**: Use cProfile to identify where the per-query overhead originates
+1. ~~**Connector-vs-connector comparison**: Run pycubrid vs CUBRIDdb against the same CUBRID instance~~ → **Done**: See [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md)
+2. ~~**Profile pycubrid internals**: Use cProfile to identify where the per-query overhead originates~~ → **Done**: See profiling analysis in [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md)
+3. **Optimize bulk row parsing**: Primary target — `_parse_row_data` → `_read_value` → `_parse_int` hot path
+4. **Vary row counts**: Test SELECT with 10, 100, 1K, 10K rows to find the exact crossover point
+5. **Connection pooling**: Test with concurrency > 1 to see if the driver overhead is amplified under contention
 
 ## Artifacts
 

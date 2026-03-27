@@ -1,8 +1,15 @@
 # Baseline Benchmark Results
 
 > **Tag**: `baseline-v1`
-> **Date**: 2026-03-16
+> **Date**: 2026-03-16 (initial), 2026-03-27 (updated with driver comparison)
 > **Purpose**: Formal "before" reference for all future optimization work in the CUBRID ecosystem Performance Loop.
+
+## ⚠️ Important Updates Since Initial Baseline
+
+1. **fetchall bug fixed** ([pycubrid@bb687dc](https://github.com/cubrid-labs/pycubrid/commit/bb687dc)): pycubrid's `fetchall()` only returned the first CAS batch (~477 rows out of 10K). SELECT results below are affected. The ratios for INSERT/UPDATE/DELETE remain valid.
+2. **Autocommit mismatch discovered**: CUBRIDdb defaults `autocommit=True`, pycubrid defaults `autocommit=False`. This was not controlled in the initial baseline.
+3. **Driver comparison completed**: See [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md) for corrected pycubrid vs CUBRIDdb results with proper controls.
+4. **Current optimization focus**: Bulk row parsing (SELECT 10K rows) — pycubrid is 2.82× slower than CUBRIDdb. See [README.md](README.md) for the optimization roadmap.
 
 ## Environment
 
@@ -86,6 +93,9 @@ make clean
 ## Tier 1 Results — Driver Throughput
 
 ### Python — pycubrid vs PyMySQL
+
+> **⚠️ Caveat**: These results were collected before the fetchall bug fix and without autocommit control.
+> For corrected driver comparison results, see [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md).
 
 **Row count**: 10,000 (insert/select), 1,000 (update/delete) · **Rounds**: 5 · **Source**: `results/python_tier1.json`
 
@@ -194,6 +204,7 @@ make clean
    - Root cause: pycubrid is a pure-Python protocol implementation; PyMySQL benefits from C-level optimizations
    - **This is the primary optimization target** for the Performance Loop
    - Highest gap in `insert_sequential` (6.0×), lowest in `select_by_pk` (4.5×)
+   - **Update (2026-03-27)**: After the fetchall bug fix and controlled benchmarking with CUBRIDdb (C extension for CUBRID), pycubrid is actually competitive for single-row operations (within 10% or faster). The real bottleneck is bulk row parsing (SELECT 10K: 2.82× slower). See [DRIVER_COMPARISON.md](DRIVER_COMPARISON.md).
 
 2. **TypeScript (cubrid-client)**: CUBRID is **~2.3× faster** than MySQL (ratio 0.4×)
    - cubrid-client uses an efficient native CAS binary protocol implementation
