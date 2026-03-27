@@ -16,7 +16,7 @@ environment:
   software:
     python: "CPython 3.12.8"
     cubrid_server: "11.2"
-    docker: "Docker"
+    docker: "24.0.5"
   drivers:
     pycubrid: "0.5.0"
     pymysql: "1.1.2"
@@ -28,5 +28,6 @@ environment:
 
 artifacts:
   raw_dir: raw/
+  figures_dir: figures/
 
 notes: "Cross-database comparison: pycubrid/CUBRID versus PyMySQL/MySQL via benchforge methodology."

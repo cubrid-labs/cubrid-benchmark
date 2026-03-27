@@ -129,6 +129,8 @@ Tie — commit dominates.
 
 ### 3. Summary
 
+![Latency Comparison](runs/2026-03-27_before-optimization/figures/driver_comparison.png)
+
 | Scenario | Ratio (pycubrid / CUBRIDdb) | Assessment |
 |----------|---------------------------|------------|
 | Connect | 0.22× | pycubrid 4.5× faster |
@@ -158,6 +160,8 @@ Top functions by total time (100 iterations × 10K rows = 1M rows parsed):
 | 8 | `cursor.fetchone` | 1.196 | 5.4% | 1,000,100 |
 
 ### Hot Path: `_parse_row_data` → `_read_value` → `_parse_int`
+
+![Hotspot Profile](runs/2026-03-27_before-optimization/figures/hotspot_profile.png)
 
 These three functions account for **50.7%** of total execution time.
 

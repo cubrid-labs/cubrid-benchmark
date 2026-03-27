@@ -8,18 +8,18 @@ comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
 environment:
   host:
     hostname: "devbox"
-    cpu: "Intel Core i5-4200M @ 2.50 GHz"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
     cores: 4
-    memory_gb: 0
+    memory_gb: 15.3
     os: "Linux"
     kernel: "5.15.0-173-generic"
   software:
     python: "CPython 3.12.8"
     cubrid_server: "11.2"
-    docker: "Docker"
+    docker: "24.0.5"
   drivers:
     pycubrid: "0.5.0"
-    CUBRIDdb: "9.3.0.1"
+    cubriddb: "9.3.0.1"
   database:
     name: benchdb
     host: localhost

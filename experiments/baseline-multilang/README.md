@@ -185,6 +185,10 @@ make clean
 
 ## Summary Matrix
 
+![Cross-Language Benchmark Comparison](runs/2026-03-16_initial/figures/multilang_comparison.png)
+
+Cross-language comparison chart: panel (a) shows CUBRID/MySQL latency ratios across Python, TypeScript, and Go; panel (b) shows absolute Python latency (pycubrid vs PyMySQL) for the same scenarios.
+
 ### Performance Ratio (CUBRID ÷ MySQL)
 
 > Values <1.0 mean CUBRID is faster. Values >1.0 mean MySQL is faster.

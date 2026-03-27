@@ -34,6 +34,10 @@
 
 > **Ratio** = PyMySQL ops/s ÷ pycubrid ops/s. Values > 1 mean PyMySQL is faster.
 
+![Throughput and Latency Comparison](runs/2026-03-27_initial/figures/throughput_comparison.png)
+
+*Figure: Two-panel benchmark comparison of throughput (ops/s) and median latency (p50, ms) for pycubrid vs PyMySQL across five scenarios.*
+
 ## Key Findings
 
 1. **pycubrid has 3.4×–7.1× higher latency on single-row operations** — INSERT, SELECT by PK, UPDATE, and DELETE all show pycubrid at ~1–2 ms p50 vs PyMySQL at ~0.2–0.3 ms p50. This is a **driver-level overhead**, not just a database-level difference.
