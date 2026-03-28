@@ -1,0 +1,43 @@
+run_id: "2026-03-28_first-measurement"
+date: "2026-03-28T00:00:00Z"
+label: "first-measurement"
+role: baseline
+compares_to: null
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
+    cores: 4
+    memory_gb: 15.3
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.10.12"
+    cubrid_server: "11.2.9.0866"
+    docker: "29.3.1"
+  drivers:
+    pycubrid: "0.6.0"
+    sqlalchemy_cubrid: "0.7.1"
+    sqlalchemy: "2.0.48"
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+protocol:
+  duration_s: 10
+  warmup_s: 2
+  seed: 42
+  seed_rows: 1000
+  batch_size: 100
+  concurrency: 1
+
+artifacts:
+  raw_dir: raw/
+  derived_dir: derived/
+  figures_dir: figures/
+
+notes: "First ORM overhead measurement. All 3 workers (raw pycubrid, SQLAlchemy Core, SQLAlchemy ORM) executed successfully with 0 errors."

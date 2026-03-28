@@ -1,0 +1,190 @@
+{
+  "workers": {
+    "raw_pycubrid": {
+      "insert_single": {
+        "ops": 154,
+        "errors": 0,
+        "throughput_ops_s": 2.13,
+        "p50_ms": 66.48,
+        "p95_ms": 77.68,
+        "p99_ms": 88.97,
+        "mean_ms": 64.96
+      },
+      "insert_batch": {
+        "ops": 57,
+        "errors": 0,
+        "throughput_ops_s": 0.79,
+        "p50_ms": 166.28,
+        "p95_ms": 233.15,
+        "p99_ms": 265.14,
+        "mean_ms": 177.11
+      },
+      "select_by_pk": {
+        "ops": 8803,
+        "errors": 0,
+        "throughput_ops_s": 121.58,
+        "p50_ms": 1.1,
+        "p95_ms": 1.47,
+        "p99_ms": 1.78,
+        "mean_ms": 1.13
+      },
+      "select_full_scan": {
+        "ops": 1427,
+        "errors": 0,
+        "throughput_ops_s": 19.71,
+        "p50_ms": 6.85,
+        "p95_ms": 8.27,
+        "p99_ms": 8.82,
+        "mean_ms": 7.0
+      },
+      "update_by_pk": {
+        "ops": 164,
+        "errors": 0,
+        "throughput_ops_s": 2.27,
+        "p50_ms": 66.28,
+        "p95_ms": 66.75,
+        "p99_ms": 66.92,
+        "mean_ms": 61.01
+      },
+      "delete_by_pk": {
+        "ops": 157,
+        "errors": 0,
+        "throughput_ops_s": 2.17,
+        "p50_ms": 66.39,
+        "p95_ms": 77.67,
+        "p99_ms": 77.81,
+        "mean_ms": 63.73
+      }
+    },
+    "sqlalchemy_core": {
+      "insert_single": {
+        "ops": 150,
+        "errors": 0,
+        "throughput_ops_s": 2.07,
+        "p50_ms": 66.55,
+        "p95_ms": 77.85,
+        "p99_ms": 88.78,
+        "mean_ms": 66.84
+      },
+      "insert_batch": {
+        "ops": 66,
+        "errors": 0,
+        "throughput_ops_s": 0.91,
+        "p50_ms": 154.76,
+        "p95_ms": 190.09,
+        "p99_ms": 222.23,
+        "mean_ms": 152.81
+      },
+      "select_by_pk": {
+        "ops": 7564,
+        "errors": 0,
+        "throughput_ops_s": 104.41,
+        "p50_ms": 1.28,
+        "p95_ms": 1.68,
+        "p99_ms": 1.95,
+        "mean_ms": 1.32
+      },
+      "select_full_scan": {
+        "ops": 1306,
+        "errors": 0,
+        "throughput_ops_s": 18.03,
+        "p50_ms": 7.41,
+        "p95_ms": 8.99,
+        "p99_ms": 10.23,
+        "mean_ms": 7.66
+      },
+      "update_by_pk": {
+        "ops": 165,
+        "errors": 0,
+        "throughput_ops_s": 2.28,
+        "p50_ms": 65.87,
+        "p95_ms": 66.7,
+        "p99_ms": 76.96,
+        "mean_ms": 60.71
+      },
+      "delete_by_pk": {
+        "ops": 150,
+        "errors": 0,
+        "throughput_ops_s": 2.07,
+        "p50_ms": 66.5,
+        "p95_ms": 78.56,
+        "p99_ms": 133.35,
+        "mean_ms": 66.85
+      }
+    },
+    "sqlalchemy_orm": {
+      "insert_single": {
+        "ops": 128,
+        "errors": 0,
+        "throughput_ops_s": 1.77,
+        "p50_ms": 78.21,
+        "p95_ms": 89.81,
+        "p99_ms": 104.49,
+        "mean_ms": 78.12
+      },
+      "insert_batch": {
+        "ops": 55,
+        "errors": 0,
+        "throughput_ops_s": 0.76,
+        "p50_ms": 168.5,
+        "p95_ms": 241.31,
+        "p99_ms": 255.35,
+        "mean_ms": 183.74
+      },
+      "select_by_pk": {
+        "ops": 5189,
+        "errors": 0,
+        "throughput_ops_s": 71.69,
+        "p50_ms": 1.89,
+        "p95_ms": 2.3,
+        "p99_ms": 2.5,
+        "mean_ms": 1.92
+      },
+      "select_full_scan": {
+        "ops": 623,
+        "errors": 0,
+        "throughput_ops_s": 8.61,
+        "p50_ms": 14.3,
+        "p95_ms": 31.54,
+        "p99_ms": 34.13,
+        "mean_ms": 16.05
+      },
+      "update_by_pk": {
+        "ops": 143,
+        "errors": 0,
+        "throughput_ops_s": 1.98,
+        "p50_ms": 67.94,
+        "p95_ms": 79.75,
+        "p99_ms": 88.87,
+        "mean_ms": 70.25
+      },
+      "delete_by_pk": {
+        "ops": 125,
+        "errors": 0,
+        "throughput_ops_s": 1.73,
+        "p50_ms": 78.37,
+        "p95_ms": 89.49,
+        "p99_ms": 100.66,
+        "mean_ms": 80.19
+      }
+    }
+  },
+  "overhead_vs_raw": {
+    "sqlalchemy_core": {
+      "insert_single": 1.0,
+      "insert_batch": 0.93,
+      "select_by_pk": 1.16,
+      "select_full_scan": 1.08,
+      "update_by_pk": 0.99,
+      "delete_by_pk": 1.0
+    },
+    "sqlalchemy_orm": {
+      "insert_single": 1.18,
+      "insert_batch": 1.01,
+      "select_by_pk": 1.72,
+      "select_full_scan": 2.09,
+      "update_by_pk": 1.03,
+      "delete_by_pk": 1.18
+    }
+  }
+}
