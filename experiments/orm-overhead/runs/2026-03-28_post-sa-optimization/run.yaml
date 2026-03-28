@@ -1,0 +1,49 @@
+run_id: "2026-03-28_post-sa-optimization"
+date: "2026-03-28T12:10:00Z"
+label: "post-sa-optimization"
+role: candidate
+compares_to: "2026-03-28_first-measurement"
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
+    cores: 4
+    memory_gb: 15.3
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.10.12"
+    cubrid_server: "11.2.9.0866"
+    docker: "29.3.1"
+  drivers:
+    pycubrid: "0.6.0"
+    sqlalchemy_cubrid: "0.7.1"
+    sqlalchemy: "2.0.48"
+  database:
+    name: testdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+protocol:
+  duration_s: 10
+  warmup_s: 2
+  seed: 42
+  seed_rows: 1000
+  batch_size: 100
+  concurrency: 1
+
+artifacts:
+  raw_dir: raw/
+  derived_dir: derived/
+  figures_dir: figures/
+
+notes: >
+  Re-measurement after sqlalchemy-cubrid v0.7.1 optimization (query compilation
+  caching, result mapping improvements). Key finding: raw pycubrid latency
+  improved ~15% for writes (insert_single, update_by_pk), but ORM/Core overhead
+  ratios appear slightly higher because the baseline denominator improved. Absolute
+  SA ORM latencies are essentially unchanged — the v0.7.1 optimizations did not
+  measurably improve or degrade ORM layer performance in this workload.

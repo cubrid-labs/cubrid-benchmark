@@ -1,0 +1,280 @@
+{
+  "workers": {
+    "raw_pycubrid": {
+      "insert_single": {
+        "ops": 164,
+        "errors": 0,
+        "throughput_ops_s": 2.26,
+        "p50_ms": 55.83,
+        "p95_ms": 77.62,
+        "p99_ms": 78.72,
+        "mean_ms": 61.22
+      },
+      "insert_batch": {
+        "ops": 59,
+        "errors": 0,
+        "throughput_ops_s": 0.81,
+        "p50_ms": 155.46,
+        "p95_ms": 221.73,
+        "p99_ms": 277.59,
+        "mean_ms": 171.49
+      },
+      "select_by_pk": {
+        "ops": 9034,
+        "errors": 0,
+        "throughput_ops_s": 124.74,
+        "p50_ms": 1.06,
+        "p95_ms": 1.45,
+        "p99_ms": 1.74,
+        "mean_ms": 1.1
+      },
+      "select_full_scan": {
+        "ops": 1418,
+        "errors": 0,
+        "throughput_ops_s": 19.58,
+        "p50_ms": 6.88,
+        "p95_ms": 8.37,
+        "p99_ms": 9.4,
+        "mean_ms": 7.05
+      },
+      "update_by_pk": {
+        "ops": 165,
+        "errors": 0,
+        "throughput_ops_s": 2.28,
+        "p50_ms": 56.1,
+        "p95_ms": 66.71,
+        "p99_ms": 77.56,
+        "mean_ms": 60.64
+      },
+      "delete_by_pk": {
+        "ops": 159,
+        "errors": 0,
+        "throughput_ops_s": 2.2,
+        "p50_ms": 66.4,
+        "p95_ms": 77.61,
+        "p99_ms": 77.96,
+        "mean_ms": 62.93
+      }
+    },
+    "sqlalchemy_core": {
+      "insert_single": {
+        "ops": 153,
+        "errors": 0,
+        "throughput_ops_s": 2.11,
+        "p50_ms": 66.48,
+        "p95_ms": 77.71,
+        "p99_ms": 99.77,
+        "mean_ms": 65.67
+      },
+      "insert_batch": {
+        "ops": 63,
+        "errors": 0,
+        "throughput_ops_s": 0.87,
+        "p50_ms": 155.3,
+        "p95_ms": 209.93,
+        "p99_ms": 221.67,
+        "mean_ms": 159.02
+      },
+      "select_by_pk": {
+        "ops": 7492,
+        "errors": 0,
+        "throughput_ops_s": 103.52,
+        "p50_ms": 1.31,
+        "p95_ms": 1.65,
+        "p99_ms": 1.92,
+        "mean_ms": 1.33
+      },
+      "select_full_scan": {
+        "ops": 1306,
+        "errors": 0,
+        "throughput_ops_s": 18.05,
+        "p50_ms": 7.39,
+        "p95_ms": 9.0,
+        "p99_ms": 10.2,
+        "mean_ms": 7.66
+      },
+      "update_by_pk": {
+        "ops": 170,
+        "errors": 0,
+        "throughput_ops_s": 2.35,
+        "p50_ms": 55.68,
+        "p95_ms": 66.77,
+        "p99_ms": 67.27,
+        "mean_ms": 59.12
+      },
+      "delete_by_pk": {
+        "ops": 147,
+        "errors": 0,
+        "throughput_ops_s": 2.03,
+        "p50_ms": 66.58,
+        "p95_ms": 77.75,
+        "p99_ms": 77.9,
+        "mean_ms": 68.2
+      }
+    },
+    "sqlalchemy_orm": {
+      "insert_single": {
+        "ops": 127,
+        "errors": 0,
+        "throughput_ops_s": 1.75,
+        "p50_ms": 78.85,
+        "p95_ms": 89.46,
+        "p99_ms": 91.28,
+        "mean_ms": 79.06
+      },
+      "insert_batch": {
+        "ops": 56,
+        "errors": 0,
+        "throughput_ops_s": 0.77,
+        "p50_ms": 177.44,
+        "p95_ms": 240.13,
+        "p99_ms": 277.91,
+        "mean_ms": 181.66
+      },
+      "select_by_pk": {
+        "ops": 5145,
+        "errors": 0,
+        "throughput_ops_s": 70.84,
+        "p50_ms": 1.89,
+        "p95_ms": 2.36,
+        "p99_ms": 2.64,
+        "mean_ms": 1.94
+      },
+      "select_full_scan": {
+        "ops": 626,
+        "errors": 0,
+        "throughput_ops_s": 8.62,
+        "p50_ms": 14.17,
+        "p95_ms": 31.74,
+        "p99_ms": 34.61,
+        "mean_ms": 16.0
+      },
+      "update_by_pk": {
+        "ops": 145,
+        "errors": 0,
+        "throughput_ops_s": 2.0,
+        "p50_ms": 69.06,
+        "p95_ms": 80.18,
+        "p99_ms": 89.55,
+        "mean_ms": 69.39
+      },
+      "delete_by_pk": {
+        "ops": 129,
+        "errors": 0,
+        "throughput_ops_s": 1.78,
+        "p50_ms": 78.06,
+        "p95_ms": 89.69,
+        "p99_ms": 90.6,
+        "mean_ms": 78.01
+      }
+    }
+  },
+  "overhead_vs_raw": {
+    "sqlalchemy_core": {
+      "insert_single": 1.19,
+      "insert_batch": 1.0,
+      "select_by_pk": 1.24,
+      "select_full_scan": 1.07,
+      "update_by_pk": 0.99,
+      "delete_by_pk": 1.0
+    },
+    "sqlalchemy_orm": {
+      "insert_single": 1.41,
+      "insert_batch": 1.14,
+      "select_by_pk": 1.78,
+      "select_full_scan": 2.06,
+      "update_by_pk": 1.23,
+      "delete_by_pk": 1.18
+    }
+  },
+  "comparison_vs_baseline": {
+    "sqlalchemy_core": {
+      "insert_single": {
+        "baseline_overhead": 1.0,
+        "new_overhead": 1.19,
+        "delta": 0.19,
+        "change_pct": 19.0,
+        "improved": false
+      },
+      "insert_batch": {
+        "baseline_overhead": 0.93,
+        "new_overhead": 1.0,
+        "delta": 0.07,
+        "change_pct": 7.5,
+        "improved": false
+      },
+      "select_by_pk": {
+        "baseline_overhead": 1.16,
+        "new_overhead": 1.24,
+        "delta": 0.08,
+        "change_pct": 6.9,
+        "improved": false
+      },
+      "select_full_scan": {
+        "baseline_overhead": 1.08,
+        "new_overhead": 1.07,
+        "delta": -0.01,
+        "change_pct": -0.9,
+        "improved": true
+      },
+      "update_by_pk": {
+        "baseline_overhead": 0.99,
+        "new_overhead": 0.99,
+        "delta": 0.0,
+        "change_pct": 0.0,
+        "improved": false
+      },
+      "delete_by_pk": {
+        "baseline_overhead": 1.0,
+        "new_overhead": 1.0,
+        "delta": 0.0,
+        "change_pct": 0.0,
+        "improved": false
+      }
+    },
+    "sqlalchemy_orm": {
+      "insert_single": {
+        "baseline_overhead": 1.18,
+        "new_overhead": 1.41,
+        "delta": 0.23,
+        "change_pct": 19.5,
+        "improved": false
+      },
+      "insert_batch": {
+        "baseline_overhead": 1.01,
+        "new_overhead": 1.14,
+        "delta": 0.13,
+        "change_pct": 12.9,
+        "improved": false
+      },
+      "select_by_pk": {
+        "baseline_overhead": 1.72,
+        "new_overhead": 1.78,
+        "delta": 0.06,
+        "change_pct": 3.5,
+        "improved": false
+      },
+      "select_full_scan": {
+        "baseline_overhead": 2.09,
+        "new_overhead": 2.06,
+        "delta": -0.03,
+        "change_pct": -1.4,
+        "improved": true
+      },
+      "update_by_pk": {
+        "baseline_overhead": 1.03,
+        "new_overhead": 1.23,
+        "delta": 0.2,
+        "change_pct": 19.4,
+        "improved": false
+      },
+      "delete_by_pk": {
+        "baseline_overhead": 1.18,
+        "new_overhead": 1.18,
+        "delta": 0.0,
+        "change_pct": 0.0,
+        "improved": false
+      }
+    }
+  }
+}

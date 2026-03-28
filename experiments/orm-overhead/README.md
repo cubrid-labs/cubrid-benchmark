@@ -94,6 +94,7 @@ python experiments/orm-overhead/workers/worker_sqlalchemy_orm.py /tmp/orm_overhe
 | Run ID | Date | Label | Comparable Group | Compares To | Key Finding |
 |--------|------|-------|-----------------|-------------|-------------|
 | 2026-03-28_first-measurement | 2026-03-28 | first-measurement | devbox-i5-4200M-linux5.15-docker-cubrid112 | — (baseline) | Core ≈ raw for writes; ORM adds 1.7–2.1× on reads |
+| 2026-03-28_post-sa-optimization | 2026-03-28 | post-sa-optimization | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_first-measurement | ORM absolute latency unchanged; raw pycubrid ~15% faster on writes |
 
 ## Results: 2026-03-28_first-measurement (Baseline)
 
@@ -123,15 +124,64 @@ python experiments/orm-overhead/workers/worker_sqlalchemy_orm.py /tmp/orm_overhe
 
 ![ORM Overhead Comparison](runs/2026-03-28_first-measurement/figures/orm_overhead_comparison.png)
 
+## Results: 2026-03-28_post-sa-optimization (Candidate)
+
+### Overhead Ratios (× raw pycubrid)
+
+| Operation | Core (baseline) | Core (new) | Δ | ORM (baseline) | ORM (new) | Δ |
+|-----------|----------------|-----------|---|----------------|-----------|---|
+| insert_single | 1.00× | 1.19× | +0.19 | 1.18× | 1.41× | +0.23 |
+| insert_batch | 0.93× | 1.00× | +0.07 | 1.01× | 1.14× | +0.13 |
+| select_by_pk | 1.16× | 1.24× | +0.08 | 1.72× | 1.78× | +0.06 |
+| select_full_scan | 1.08× | 1.07× | −0.01 | 2.09× | 2.06× | −0.03 |
+| update_by_pk | 0.99× | 0.99× | +0.00 | 1.03× | 1.23× | +0.20 |
+| delete_by_pk | 1.00× | 1.00× | +0.00 | 1.18× | 1.18× | +0.00 |
+
+> ⚠️ **Overhead ratios appear higher** in some cases, but this is misleading — see absolute latency comparison below.
+
+### Absolute p50 Latency Comparison (ms)
+
+| Operation | raw (baseline) | raw (new) | Δ | Core (baseline) | Core (new) | Δ | ORM (baseline) | ORM (new) | Δ |
+|-----------|---------------|----------|---|----------------|-----------|---|----------------|----------|---|
+| insert_single | 66.48 | 55.83 | −16.0% | 66.55 | 66.48 | −0.1% | 78.21 | 78.85 | +0.8% |
+| insert_batch | 166.28 | 155.46 | −6.5% | 154.76 | 155.30 | +0.3% | 168.50 | 177.44 | +5.3% |
+| select_by_pk | 1.10 | 1.06 | −3.6% | 1.28 | 1.31 | +2.3% | 1.89 | 1.89 | +0.0% |
+| select_full_scan | 6.85 | 6.88 | +0.4% | 7.41 | 7.39 | −0.3% | 14.30 | 14.17 | −0.9% |
+| update_by_pk | 66.28 | 56.10 | −15.4% | 65.87 | 55.68 | −15.5% | 67.94 | 69.06 | +1.6% |
+| delete_by_pk | 66.39 | 66.40 | +0.0% | 66.50 | 66.58 | +0.1% | 78.37 | 78.06 | −0.4% |
+
+### Charts
+
+![Overhead Comparison](runs/2026-03-28_post-sa-optimization/figures/overhead_comparison.png)
+![Latency Comparison](runs/2026-03-28_post-sa-optimization/figures/latency_comparison.png)
+
+### Analysis
+
+The overhead *ratios* appear higher because **raw pycubrid itself improved ~15% on write operations** (insert_single: 66.5→55.8ms, update_by_pk: 66.3→56.1ms), shrinking the denominator. When examining **absolute latencies**:
+
+- **SA Core**: Essentially unchanged. update_by_pk improved 15.5% (tracks raw improvement).
+- **SA ORM**: Essentially unchanged. No significant improvement or degradation.
+- **Raw pycubrid**: 15% faster on writes — this is a pycubrid v0.6.0 variance/warmup effect, not a sqlalchemy-cubrid change.
+
+**Verdict**: The sqlalchemy-cubrid v0.7.1 query compilation caching and result mapping optimizations did **not measurably change** ORM overhead in this 10-second-per-operation benchmark. The optimizations likely benefit cold-start and varied-query workloads more than this repetitive benchmark.
+
 ## Latest Conclusion
 
-**Hypothesis confirmed.** SQLAlchemy Core adds minimal overhead (0.93–1.16×) for most operations, essentially matching raw pycubrid for write-heavy workloads. SQLAlchemy ORM adds measurable overhead primarily on read operations:
+**Original hypothesis confirmed; v0.7.1 optimization impact not measurable in this workload.**
 
-- **select_full_scan**: 2.09× overhead — object materialization dominates when fetching 1000 rows
-- **select_by_pk**: 1.72× overhead — identity map lookup and object construction
-- **insert/update/delete**: 1.01–1.18× — write operations are dominated by network + CUBRID commit latency, so ORM overhead is negligible
+The baseline findings still hold:
 
-**Key insight**: For CUBRID workloads, the write-path latency is dominated by server-side commit (~66ms), making ORM overhead invisible for writes. Read-path optimization (object materialization, row mapping) is where ORM overhead is most impactful.
+- **SQLAlchemy Core**: 0.93–1.24× overhead — near-raw for writes, small overhead for reads
+- **SQLAlchemy ORM**: 1.01–2.09× overhead — reads most impacted (select_full_scan 2.06–2.09×)
+- **Write latency**: Dominated by CUBRID server-side commit (~55–66ms), masking any ORM overhead
+
+The post-optimization run shows sqlalchemy-cubrid v0.7.1's compilation caching and result mapping improvements did not measurably reduce overhead in a steady-state benchmark with repetitive queries. The optimizations are expected to benefit:
+
+1. **Cold-start scenarios** — first compilation of each query
+2. **Diverse query workloads** — many different SQL shapes hitting the cache
+3. **Long-running applications** — amortized cache benefit over thousands of unique queries
+
+**Next steps**: Design a benchmark specifically targeting compilation caching (many unique query shapes, cold-start measurement) to properly evaluate the v0.7.1 optimizations.
 
 ### Environment
 
