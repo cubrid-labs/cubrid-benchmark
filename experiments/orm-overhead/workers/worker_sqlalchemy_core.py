@@ -209,7 +209,9 @@ def run_worker(input_obj: WorkerInput) -> dict[str, Any]:
             table.c.id == bindparam("id")
         )
         update_stmt = (
-            update(table).where(table.c.id == bindparam("id")).values(amount=bindparam("amount"))
+            update(table)
+            .where(table.c.id == bindparam("row_id"))
+            .values(amount=bindparam("new_amount"))
         )
         delete_stmt = delete(table).where(table.c.id == bindparam("id"))
         select_full_stmt = text("SELECT id, name, amount FROM bench_orm_overhead_items")
@@ -250,7 +252,7 @@ def run_worker(input_obj: WorkerInput) -> dict[str, Any]:
 
         def op_update_by_pk() -> None:
             rid = rng.randint(1, seed_rows)
-            conn.execute(update_stmt, {"id": rid, "amount": rng.randint(1, 1_000_000)})
+            conn.execute(update_stmt, {"row_id": rid, "new_amount": rng.randint(1, 1_000_000)})
             conn.commit()
 
         def op_delete_by_pk() -> None:
