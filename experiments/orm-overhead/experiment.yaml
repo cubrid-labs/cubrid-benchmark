@@ -1,0 +1,17 @@
+id: orm-overhead
+title: "CUBRID ORM Overhead: raw pycubrid vs SQLAlchemy Core vs SQLAlchemy ORM"
+status: active
+question: "What overhead do SQLAlchemy Core and SQLAlchemy ORM add versus raw pycubrid for identical CRUD operations on CUBRID 11.2?"
+system_under_test: "pycubrid and sqlalchemy-cubrid on CUBRID 11.2"
+workload:
+  name: "tier2-orm-overhead"
+  schema: bench_orm_overhead_items
+  dataset: configurable synthetic dataset (default seed_rows=1000)
+protocol:
+  warmup: "time-window warmup per operation (worker input warmup_s)"
+  measurement: "time-window latency sampling per operation (worker input duration_s)"
+  iterations: 5
+  metrics: [throughput, p50_ms, p95_ms, p99_ms]
+repro:
+  setup: "docker compose -f docker/compose.yml up -d"
+  run: "python workers/worker_raw_pycubrid.py <config.json>; python workers/worker_sqlalchemy_core.py <config.json>; python workers/worker_sqlalchemy_orm.py <config.json>"
