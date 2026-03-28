@@ -4,9 +4,10 @@
 ![CI](https://github.com/cubrid-labs/cubrid-benchmark/actions/workflows/bench.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 [![GitHub stars](https://img.shields.io/github/stars/cubrid-labs/cubrid-benchmark)](https://github.com/cubrid-labs/cubrid-benchmark)
+![status](https://img.shields.io/badge/status-active%20development-yellow)
 <!-- BADGES:END -->
 
-Multi-language benchmark suite for CUBRID 11.2 vs MySQL 8.0 across Python, TypeScript, and Go.
+Scientific benchmark suite for CUBRID database ecosystem — reproducible experiments, automated comparison.
 
 ## Experiments
 
@@ -16,6 +17,7 @@ Multi-language benchmark suite for CUBRID 11.2 vs MySQL 8.0 across Python, TypeS
 | 2 | pycubrid vs PyMySQL | completed | Cross-database driver comparison | 2026-03-27 | [Report](experiments/benchforge-pycubrid-vs-pymysql/README.md) |
 | 3 | pycubrid vs CUBRIDdb | active | Same-database driver comparison, optimization targets | 2026-03-27 | [Report](experiments/driver-comparison/README.md) |
 | 4 | Row-count sweep | active | SELECT fetch scaling by result set size (100–10K rows) | 2026-03-27 | [Report](experiments/row-count-sweep/README.md) |
+| 5 | ORM overhead | scaffold | Raw pycubrid vs SQLAlchemy Core vs SQLAlchemy ORM | — | [Report](experiments/orm-overhead/README.md) |
 
 ## Quick Start
 
@@ -29,7 +31,7 @@ make all       # Run all benchmarks
 
 | Language | CUBRID Driver | MySQL Driver |
 |----------|--------------|--------------|
-| Python | [pycubrid](https://github.com/cubrid-labs/pycubrid) v0.5.0 | PyMySQL |
+| Python | [pycubrid](https://github.com/cubrid-labs/pycubrid) v0.6.0 | PyMySQL |
 | Python | [CUBRIDdb](https://github.com/cubrid/cubrid-python) v9.3.0.1 (C ext) | — |
 | TypeScript | [cubrid-client](https://github.com/cubrid-labs/cubrid-client) v1.1.0 | mysql2 |
 | Go | [cubrid-go](https://github.com/cubrid-labs/cubrid-go) v0.2.1 | go-sql-driver/mysql |
