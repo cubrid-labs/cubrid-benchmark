@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775712829648,
+  "lastUpdate": 1775800014338,
   "repoUrl": "https://github.com/cubrid-labs/cubrid-benchmark",
   "entries": {
     "Python Tier1 Benchmark": [
@@ -2300,6 +2300,98 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.015069135826722297",
             "extra": "mean: 2.478732161200014 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "yeongseon",
+            "username": "yeongseon",
+            "email": "yeongseon@users.noreply.github.com"
+          },
+          "committer": {
+            "name": "yeongseon",
+            "username": "yeongseon",
+            "email": "yeongseon@users.noreply.github.com"
+          },
+          "id": "6c29a6ad380d3a43fe575fd9ec8b1cf639fc66e2",
+          "message": "bench: add post-sa-optimization ORM overhead re-measurement\n\nRe-measure ORM overhead after sqlalchemy-cubrid v0.7.1 optimizations\n(query compilation caching, result mapping). Finding: absolute SA ORM\nlatencies unchanged — optimizations target cold-start/diverse-query\nworkloads rather than steady-state repetitive benchmarks.\n\nUltraworked with [Sisyphus](https://github.com/code-yeongyu/oh-my-opencode)\n\nCo-authored-by: Sisyphus <clio-agent@sisyphuslabs.ai>",
+          "timestamp": "2026-03-28T12:15:32Z",
+          "url": "https://github.com/cubrid-labs/cubrid-benchmark/commit/6c29a6ad380d3a43fe575fd9ec8b1cf639fc66e2"
+        },
+        "date": 1775800013554,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "python/bench_pycubrid.py::test_bench_insert_sequential",
+            "value": 0.05491805537871475,
+            "unit": "iter/sec",
+            "range": "stddev: 0.10273705668955335",
+            "extra": "mean: 18.2089477332 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_select_by_pk",
+            "value": 0.03545355018197968,
+            "unit": "iter/sec",
+            "range": "stddev: 0.17163690552782673",
+            "extra": "mean: 28.205919995800013 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_select_full_scan",
+            "value": 0.055853996578135126,
+            "unit": "iter/sec",
+            "range": "stddev: 0.3176771556411656",
+            "extra": "mean: 17.9038217722 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_update_indexed",
+            "value": 0.05332031861421595,
+            "unit": "iter/sec",
+            "range": "stddev: 0.06526556957085357",
+            "extra": "mean: 18.754576604 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pycubrid.py::test_bench_delete_sequential",
+            "value": 0.053004972182098826,
+            "unit": "iter/sec",
+            "range": "stddev: 0.10873677208601273",
+            "extra": "mean: 18.866154604600023 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_insert_sequential",
+            "value": 0.40348007897914917,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00508933762535631",
+            "extra": "mean: 2.478437107800005 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_select_by_pk",
+            "value": 0.19350226077189892,
+            "unit": "iter/sec",
+            "range": "stddev: 0.026045352025761165",
+            "extra": "mean: 5.167898276799997 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_select_full_scan",
+            "value": 0.4001043890915981,
+            "unit": "iter/sec",
+            "range": "stddev: 0.006206653130054245",
+            "extra": "mean: 2.499347738400002 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_update_indexed",
+            "value": 0.3740980129076941,
+            "unit": "iter/sec",
+            "range": "stddev: 0.006075106790177761",
+            "extra": "mean: 2.673096262199988 sec\nrounds: 5"
+          },
+          {
+            "name": "python/bench_pymysql.py::test_bench_delete_sequential",
+            "value": 0.3744174772264944,
+            "unit": "iter/sec",
+            "range": "stddev: 0.010219692928281345",
+            "extra": "mean: 2.67081549560005 sec\nrounds: 5"
           }
         ]
       }
