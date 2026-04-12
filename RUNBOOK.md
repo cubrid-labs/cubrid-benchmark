@@ -140,6 +140,26 @@ Use the following interpretation inside one comparable group:
 - `≥10%` relative delta: significant effect-size threshold for opening a performance issue,
   provided replication and provenance requirements are met
 
+### Threshold tuning for draft issue generation
+
+`scripts/gap_to_issue.py` converts `compare_runs.py` JSON output into draft GitHub issue markdown.
+Use it only for fail-level regressions inside one comparable group.
+
+- `--min-effect-size` defaults to `10.0` and should stay aligned with the issue-opening bar above.
+- `--min-replications` defaults to `3`, matching the minimum issue-worthy claim in this runbook.
+- If a benchmark environment is noisy, raise `--min-effect-size` before filing rather than treating
+  a single borderline run as actionable.
+- If provenance does not yet encode replication count, keep the default filing bar in the issue body
+  and treat the draft as a reminder to gather more evidence before opening anything manually.
+
+Examples:
+
+```bash
+python3 scripts/gap_to_issue.py --report results/compare_latest.json
+make gap-issues
+make gap-issues MIN_EFFECT_SIZE=15.0 MIN_REPLICATIONS=4 TARGET_REPO=cubrid-labs/sqlalchemy-cubrid
+```
+
 ## Environment Validation Checklist
 
 Before accepting a run as evidence, confirm all items below:

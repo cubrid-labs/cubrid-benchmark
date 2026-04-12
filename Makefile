@@ -1,7 +1,12 @@
-.PHONY: up down clean seed compare tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier2-python tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
+.PHONY: up down clean seed compare gap-issues tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier2-python tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
 
 COMPARE_BASELINE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_before-optimization
 COMPARE_CANDIDATE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_after-optimization
+COMPARE_REPORT ?= results/compare_latest.json
+MIN_EFFECT_SIZE ?= 10.0
+MIN_REPLICATIONS ?= 3
+TARGET_REPO ?= cubrid-labs/pycubrid
+GAP_ISSUES_OUTPUT_DIR ?=
 
 up:
 	docker compose -f docker/compose.yml up -d
@@ -17,7 +22,15 @@ seed:
 	python3 scripts/apply_schema.py
 
 compare:
-	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)"
+	mkdir -p "$(dir $(COMPARE_REPORT))"
+	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)" --output "$(COMPARE_REPORT)"
+	python3 -c 'import sys; from pathlib import Path; sys.stdout.write(Path(sys.argv[1]).read_text(encoding="utf-8"))' "$(COMPARE_REPORT)"
+
+gap-issues:
+	mkdir -p "$(dir $(COMPARE_REPORT))"
+	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)" --output "$(COMPARE_REPORT)"; rc=$$?; if [ $$rc -gt 1 ]; then exit $$rc; fi
+	python3 -c 'import sys; from pathlib import Path; sys.stdout.write(Path(sys.argv[1]).read_text(encoding="utf-8"))' "$(COMPARE_REPORT)"
+	python3 scripts/gap_to_issue.py --report "$(COMPARE_REPORT)" --min-effect-size "$(MIN_EFFECT_SIZE)" --min-replications "$(MIN_REPLICATIONS)" --target-repo "$(TARGET_REPO)" $(if $(GAP_ISSUES_OUTPUT_DIR),--output-dir "$(GAP_ISSUES_OUTPUT_DIR)",); rc=$$?; if [ $$rc -gt 1 ]; then exit $$rc; fi
 
 # Python
 tier0:
