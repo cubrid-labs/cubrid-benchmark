@@ -184,7 +184,7 @@ dependencies = [
 [[package]]
 name = "cubrid-client"
 version = "0.1.0"
-source = "git+https://github.com/cubrid-labs/cubrid-rs#d53cb303f7e95f78f62ae4ef4c9c2b5173295d9b"
+source = "git+https://github.com/cubrid-labs/cubrid-rs?rev=f43dc098c392e4aa1461591f72e055f9eb3284a7#f43dc098c392e4aa1461591f72e055f9eb3284a7"
 dependencies = [
  "cubrid-protocol",
  "thiserror",
@@ -193,7 +193,7 @@ dependencies = [
 [[package]]
 name = "cubrid-protocol"
 version = "0.1.0"
-source = "git+https://github.com/cubrid-labs/cubrid-rs#d53cb303f7e95f78f62ae4ef4c9c2b5173295d9b"
+source = "git+https://github.com/cubrid-labs/cubrid-rs?rev=f43dc098c392e4aa1461591f72e055f9eb3284a7#f43dc098c392e4aa1461591f72e055f9eb3284a7"
 dependencies = [
  "bytes",
  "thiserror",
