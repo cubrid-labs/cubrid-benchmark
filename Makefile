@@ -1,4 +1,7 @@
-.PHONY: up down clean seed tier0 tier0-ts tier0-go tier1-python tier1-python-extended tier1-ts tier1-ts-extended tier1-go tier1-go-extended bench-verify all
+.PHONY: up down clean seed compare tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
+
+COMPARE_BASELINE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_before-optimization
+COMPARE_CANDIDATE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_after-optimization
 
 up:
 	docker compose -f docker/compose.yml up -d
@@ -12,6 +15,9 @@ clean:
 
 seed:
 	python3 scripts/apply_schema.py
+
+compare:
+	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)"
 
 # Python
 tier0:
@@ -43,10 +49,17 @@ tier1-ts-extended:
 tier0-go:
 	cd go && go test -v -run TestTier0 -timeout 120s ./...
 
+# Rust
+tier0-rust:
+	cd rust && cargo run --release --bin tier0
+
 tier1-go:
 	cd go && go test -v -bench 'Benchmark(Cubrid|Mysql)(InsertSequential|SelectByPK|SelectFullScan|UpdateIndexed|DeleteSequential)$$' -benchtime 5x -timeout 900s ./...
 
 tier1-go-extended:
 	cd go && go test -v -bench 'Benchmark(Cubrid|Mysql)(ConnectDisconnect|PreparedStatement|BatchInsert|ConcurrentSelect)$$' -benchtime 5x -timeout 900s ./...
+
+tier1-rust:
+	cd rust && cargo bench
 
 all: tier0 tier1-python tier1-python-extended tier0-ts tier1-ts tier1-ts-extended tier0-go tier1-go tier1-go-extended

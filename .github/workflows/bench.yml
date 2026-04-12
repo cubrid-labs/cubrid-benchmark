@@ -81,6 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
     services:
       cubrid:
         image: cubrid/cubrid:11.2
@@ -124,6 +125,11 @@ jobs:
         with:
           go-version: "1.22"
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.75.0"
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -165,10 +171,117 @@ jobs:
       - name: Run Go Tier 1 Extended
         run: make tier1-go-extended
 
+      - name: Run Rust Tier 0
+        run: make tier0-rust
+
+      - name: Run Rust Tier 1
+        run: make tier1-rust
+
       - name: Normalize benchmark result
         run: |
           python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
           python3 scripts/normalize_results.py results/python_tier1_extended.json > results/normalized_python_tier1_extended.json
+
+      - name: Compare nightly run against latest baseline
+        id: compare_regression
+        run: |
+          baseline_dir="$(python3 - <<'PY'
+          from pathlib import Path
+          import sys
+
+          experiment_dir = Path("experiments/baseline-multilang")
+          baseline_runs = []
+          for run_yaml in experiment_dir.glob("runs/*/run.yaml"):
+              role = None
+              for line in run_yaml.read_text(encoding="utf-8").splitlines():
+                  if line.startswith("role:"):
+                      role = line.split(":", 1)[1].strip().split("#", 1)[0].strip().strip('"')
+                      break
+              if role == "baseline":
+                  baseline_runs.append(run_yaml.parent)
+
+          if not baseline_runs:
+              raise SystemExit("No baseline run found in experiments/baseline-multilang")
+
+          baseline_runs.sort()
+          sys.stdout.write(str(baseline_runs[-1]))
+          PY
+          )"
+          candidate_dir="$(mktemp -d)"
+          python3 - "$baseline_dir" "$candidate_dir" results/normalized_python_tier1.json <<'PY'
+          from __future__ import annotations
+
+          import sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          baseline_dir = Path(sys.argv[1])
+          candidate_dir = Path(sys.argv[2])
+          source_results = Path(sys.argv[3])
+
+          baseline_meta: dict[str, str] = {}
+          for line in baseline_dir.joinpath("run.yaml").read_text(encoding="utf-8").splitlines():
+              if ":" not in line:
+                  continue
+              key, value = line.split(":", 1)
+              key = key.strip()
+              if key in {"run_id", "date", "comparable_group"}:
+                  baseline_meta[key] = value.strip().strip('"')
+
+          if not baseline_meta.get("run_id") or not baseline_meta.get("comparable_group"):
+              raise SystemExit("Baseline run.yaml is missing required comparison metadata")
+
+          raw_dir = candidate_dir / "raw"
+          raw_dir.mkdir(parents=True, exist_ok=True)
+          raw_dir.joinpath("results.json").write_text(
+              source_results.read_text(encoding="utf-8"),
+              encoding="utf-8",
+          )
+
+          now = datetime.now(timezone.utc).replace(microsecond=0)
+          run_id = f"{now.date().isoformat()}_nightly-python-tier1"
+          candidate_dir.joinpath("run.yaml").write_text(
+              "\n".join(
+                  [
+                      f'run_id: "{run_id}"',
+                      f'date: "{now.isoformat().replace("+00:00", "Z")}"',
+                      'label: "nightly-python-tier1"',
+                      'role: candidate',
+                      f'compares_to: "{baseline_meta["run_id"]}"',
+                      f'comparable_group: "{baseline_meta["comparable_group"]}"',
+                      '',
+                      'artifacts:',
+                      '  raw_dir: raw/',
+                      '',
+                      f'notes: "Generated from results/normalized_python_tier1.json; baseline={baseline_meta["run_id"]}"',
+                      '',
+                  ]
+              ),
+              encoding="utf-8",
+          )
+          PY
+
+          compare_exit_code=0
+          python3 scripts/compare_runs.py \
+            --baseline-dir "$baseline_dir" \
+            --candidate-dir "$candidate_dir" \
+            --output results/regression_report.json || compare_exit_code=$?
+
+          if [ "$compare_exit_code" -eq 2 ]; then
+            exit 1
+          fi
+
+          python3 scripts/pr_comment.py results/regression_report.json > results/regression_comment.md
+          printf 'exit_code=%s\n' "$compare_exit_code" >> "$GITHUB_OUTPUT"
+
+      - name: Create issue for nightly regression
+        if: steps.compare_regression.outputs.exit_code == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Nightly benchmark regression detected: Python Tier 1" \
+            --body-file results/regression_comment.md
 
       - name: Save results and clean working tree
         run: |
