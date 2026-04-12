@@ -1,0 +1,21 @@
+[package]
+name = "cubrid-benchmark-rust"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+publish = false
+
+[dependencies]
+cubrid-client = { git = "https://github.com/cubrid-labs/cubrid-rs", package = "cubrid-client" }
+cubrid-protocol = { git = "https://github.com/cubrid-labs/cubrid-rs", package = "cubrid-protocol" }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bin]]
+name = "tier0"
+path = "src/bin/tier0.rs"
+
+[[bench]]
+name = "bench_cubrid"
+harness = false

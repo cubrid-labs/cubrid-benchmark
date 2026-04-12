@@ -9,3 +9,6 @@ node_modules/
 dist/
 build/
 bin/
+!rust/src/bin/
+!rust/src/bin/*.rs
+rust/target/
