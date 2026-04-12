@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 
 use cubrid_benchmark_rust::{
     connect, delete_sequential, drop_table, insert_rows, recreate_table, select_by_pk,
@@ -27,12 +27,10 @@ fn bench_select_10k_by_pk(c: &mut Criterion) {
     let table = table_name("select_by_pk_cubrid");
     let mut client = connect().expect("connect select by pk benchmark");
     recreate_table(&mut client, &table).expect("create select by pk table");
+    insert_rows(&mut client, &table, "select", INSERT_COUNT).expect("seed select rows");
 
     c.bench_function("bench_select_10k_by_pk", |b| {
-        b.iter(|| {
-            insert_rows(&mut client, &table, "select", INSERT_COUNT).expect("seed select rows");
-            black_box(select_by_pk(&mut client, &table, INSERT_COUNT).expect("select by pk"));
-        })
+        b.iter(|| black_box(select_by_pk(&mut client, &table, INSERT_COUNT).expect("select by pk")))
     });
 
     drop_table(&mut client, &table).expect("drop select by pk table");
@@ -43,12 +41,10 @@ fn bench_select_full_scan(c: &mut Criterion) {
     let table = table_name("select_full_scan_cubrid");
     let mut client = connect().expect("connect full scan benchmark");
     recreate_table(&mut client, &table).expect("create full scan table");
+    insert_rows(&mut client, &table, "scan", INSERT_COUNT).expect("seed scan rows");
 
     c.bench_function("bench_select_full_scan", |b| {
-        b.iter(|| {
-            insert_rows(&mut client, &table, "scan", INSERT_COUNT).expect("seed scan rows");
-            black_box(select_full_scan(&mut client, &table).expect("full scan"));
-        })
+        b.iter(|| black_box(select_full_scan(&mut client, &table).expect("full scan")))
     });
 
     drop_table(&mut client, &table).expect("drop full scan table");
@@ -61,12 +57,19 @@ fn bench_update_1k_where_indexed(c: &mut Criterion) {
     recreate_table(&mut client, &table).expect("create update table");
 
     c.bench_function("bench_update_1k_where_indexed", |b| {
-        b.iter(|| {
-            insert_rows(&mut client, &table, "update", INSERT_COUNT).expect("seed update rows");
-            black_box(
-                update_indexed(&mut client, &table, UPDATE_DELETE_COUNT).expect("update indexed"),
-            );
-        })
+        b.iter_batched_ref(
+            || {
+                insert_rows(&mut client, &table, "update", INSERT_COUNT)
+                    .expect("seed update rows");
+            },
+            |_| {
+                black_box(
+                    update_indexed(&mut client, &table, UPDATE_DELETE_COUNT)
+                        .expect("update indexed"),
+                );
+            },
+            BatchSize::SmallInput,
+        )
     });
 
     drop_table(&mut client, &table).expect("drop update table");
@@ -79,13 +82,19 @@ fn bench_delete_1k_sequential(c: &mut Criterion) {
     recreate_table(&mut client, &table).expect("create delete table");
 
     c.bench_function("bench_delete_1k_sequential", |b| {
-        b.iter(|| {
-            insert_rows(&mut client, &table, "delete", INSERT_COUNT).expect("seed delete rows");
-            black_box(
-                delete_sequential(&mut client, &table, UPDATE_DELETE_COUNT)
-                    .expect("delete sequential"),
-            );
-        })
+        b.iter_batched_ref(
+            || {
+                insert_rows(&mut client, &table, "delete", INSERT_COUNT)
+                    .expect("seed delete rows");
+            },
+            |_| {
+                black_box(
+                    delete_sequential(&mut client, &table, UPDATE_DELETE_COUNT)
+                        .expect("delete sequential"),
+                );
+            },
+            BatchSize::SmallInput,
+        )
     });
 
     drop_table(&mut client, &table).expect("drop delete table");
