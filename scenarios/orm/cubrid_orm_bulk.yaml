@@ -1,0 +1,26 @@
+name: cubrid-orm-bulk
+description: >
+  SQLAlchemy ORM bulk insert scenario for CUBRID via sqlalchemy-cubrid and pycubrid.
+  Covers ORM bulk inserts of 100 and 1000 bench_users rows.
+
+setup:
+  queries:
+    - "DELETE FROM bench_users"
+
+teardown:
+  queries:
+    - "DELETE FROM bench_users"
+
+steps:
+  - name: orm-bulk-insert-100
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_bulk_insert[100]
+
+  - name: orm-bulk-insert-1000
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_bulk_insert[1000]
+
+targets:
+  - name: sqlalchemy-cubrid
+    stack_id: python+sqlalchemy-cubrid
+    language: python
+    driver: sqlalchemy-cubrid
+    dsn: "cubrid+pycubrid://dba@localhost:33000/benchdb"

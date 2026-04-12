@@ -159,6 +159,9 @@ jobs:
       - name: Run Python Tier 1 Extended
         run: make tier1-python-extended
 
+      - name: Run Python Tier 2
+        run: make tier2-python
+
       - name: Run TypeScript Tier 1
         run: make tier1-ts
 

@@ -1,0 +1,26 @@
+name: mysql-orm-bulk
+description: >
+  SQLAlchemy ORM bulk insert scenario for MySQL via PyMySQL.
+  Covers ORM bulk inserts of 100 and 1000 bench_users rows.
+
+setup:
+  queries:
+    - "DELETE FROM bench_users"
+
+teardown:
+  queries:
+    - "DELETE FROM bench_users"
+
+steps:
+  - name: orm-bulk-insert-100
+    worker: python/bench_sqlalchemy_mysql.py::test_bench_bulk_insert[100]
+
+  - name: orm-bulk-insert-1000
+    worker: python/bench_sqlalchemy_mysql.py::test_bench_bulk_insert[1000]
+
+targets:
+  - name: sqlalchemy-mysql
+    stack_id: python+sqlalchemy-pymysql
+    language: python
+    driver: pymysql
+    dsn: "mysql+pymysql://root:bench@localhost:3306/benchdb"

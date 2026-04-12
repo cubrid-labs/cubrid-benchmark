@@ -1,4 +1,4 @@
-.PHONY: up down clean seed compare tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
+.PHONY: up down clean seed compare tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier2-python tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
 
 COMPARE_BASELINE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_before-optimization
 COMPARE_CANDIDATE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_after-optimization
@@ -35,6 +35,9 @@ bench-verify:
 tier1-python-extended:
 	cd python && python3 ../scripts/collect_metrics.py --result-json ../results/python_tier1_extended.json --metrics-json ../results/python_tier1_extended.metrics.json -- pytest bench_pycubrid_extended.py bench_pymysql_extended.py --benchmark-json=../results/python_tier1_extended.json -v
 
+tier2-python:
+	cd python && pytest bench_sqlalchemy_cubrid.py bench_sqlalchemy_mysql.py --benchmark-json=../results/tier2_python.json -v
+
 # TypeScript
 tier0-ts:
 	cd typescript && npm run tier0
@@ -62,4 +65,4 @@ tier1-go-extended:
 tier1-rust:
 	cd rust && cargo bench
 
-all: tier0 tier1-python tier1-python-extended tier0-ts tier1-ts tier1-ts-extended tier0-go tier1-go tier1-go-extended
+all: tier0 tier1-python tier1-python-extended tier2-python tier0-ts tier1-ts tier1-ts-extended tier0-go tier1-go tier1-go-extended
