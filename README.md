@@ -28,6 +28,37 @@ make seed      # Apply schema
 make all       # Run all benchmarks
 ```
 
+## Version Matrix
+
+The weekly version-matrix runner lives in `.github/workflows/bench.yml` as the
+`matrix-benchmark` job. It expands two axes:
+
+- `python-version`: `3.10`, `3.11`, `3.12`
+- `driver-version`: `1.0.0` for `pycubrid`
+
+Each matrix combination runs Tier 1 Python benchmarks against the Docker-backed CUBRID and
+MySQL services, then packages the raw benchmark output into a descriptive result file such as
+`results/python310_pycubrid100.json`.
+
+### Adding New Version Axes
+
+1. Edit the `strategy.matrix` block in `.github/workflows/bench.yml`.
+2. Add a new Python version under `python-version` or a new `pycubrid` release under
+   `driver-version`.
+3. Keep the packaging step in sync if you add a brand-new driver axis with a different driver
+   name, so artifact names and manifest metadata stay descriptive.
+4. Re-run the workflow with `workflow_dispatch` to validate the new combinations before the next
+   weekly schedule.
+
+### Matrix Results and Manifest
+
+- Per-combination result artifacts are uploaded from `results/` with names like
+  `python-tier1-py3.10-pycubrid-1.0.0`.
+- The `matrix-manifest` job downloads those artifacts back into `results/` and runs
+  `python scripts/generate_manifest.py --results-dir results`.
+- The generated `results/manifest.json` records the `(scenario, version-combo) -> result_file`
+  mapping consumed by downstream reporting.
+
 ## Drivers Tested
 
 | Language | CUBRID Driver | MySQL Driver |

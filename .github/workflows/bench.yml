@@ -4,6 +4,7 @@ on:
   pull_request:
   schedule:
     - cron: "0 3 * * *"
+    - cron: "0 4 * * 0"
   workflow_dispatch:
 
 jobs:
@@ -77,7 +78,7 @@ jobs:
         run: make tier0-go
 
   nightly:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -350,3 +351,134 @@ jobs:
           comment-on-alert: true
           fail-on-alert: false
           summary-always: true
+
+  matrix-benchmark:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 4 * * 0')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        driver-version: ["1.0.0"]
+    services:
+      cubrid:
+        image: cubrid/cubrid:11.2
+        env:
+          CUBRID_DB: benchdb
+        ports:
+          - 33000:33000
+        options: >-
+          --health-cmd "bash -c 'echo > /dev/tcp/127.0.0.1/33000'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: bench
+          MYSQL_DATABASE: benchdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h127.0.0.1 -uroot -pbench --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r python/requirements.txt
+          python -m pip install pycubrid==${{ matrix.driver-version }}
+
+      - name: Wait for databases
+        run: ./scripts/wait_for_db.sh
+
+      - name: Apply schema and seed data
+        run: make seed
+
+      - name: Run Python Tier 1 benchmark
+        run: make tier1-python
+
+      - name: Compute matrix artifact names
+        id: matrix_meta
+        run: |
+          python_slug="${{ matrix.python-version }}"
+          driver_slug="${{ matrix.driver-version }}"
+          python_slug="${python_slug//./}"
+          driver_slug="${driver_slug//./}"
+          printf 'result_file=python%s_pycubrid%s.json\n' "$python_slug" "$driver_slug" >> "$GITHUB_OUTPUT"
+          printf 'artifact_name=python-tier1-py%s-pycubrid-%s\n' "${{ matrix.python-version }}" "${{ matrix.driver-version }}" >> "$GITHUB_OUTPUT"
+
+      - name: Package matrix result
+        run: |
+          mkdir -p results
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          from pathlib import Path
+
+          python_version = "${{ matrix.python-version }}"
+          driver_version = "${{ matrix.driver-version }}"
+          result_slug = "${{ steps.matrix_meta.outputs.result_file }}"
+
+          source_path = Path("results/python_tier1.json")
+          payload = json.loads(source_path.read_text(encoding="utf-8"))
+          wrapped = {
+              "scenario": "tier1-python",
+              "python": python_version,
+              "driver": "pycubrid",
+              "driver_version": driver_version,
+              "source_file": source_path.name,
+              "results": payload,
+          }
+
+          Path("results", result_slug).write_text(
+              json.dumps(wrapped, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload matrix result artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.matrix_meta.outputs.artifact_name }}
+          path: results/${{ steps.matrix_meta.outputs.result_file }}
+
+  matrix-manifest:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 4 * * 0')
+    needs: matrix-benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download matrix result artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: python-tier1-*
+          merge-multiple: true
+          path: results
+
+      - name: Generate matrix manifest
+        run: python scripts/generate_manifest.py --results-dir results
+
+      - name: Upload matrix manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-tier1-matrix-manifest
+          path: results/manifest.json
