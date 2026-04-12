@@ -1,0 +1,13 @@
+{
+  "tool": "pycubrid test_benchmarks.py",
+  "date": "2026-04-12",
+  "pycubrid_version": "1.0.0",
+  "cubrid_server": "11.2",
+  "results": {
+    "insert": {"ops_per_sec": 398, "iterations": 200, "warmup": 50, "rounds": 3},
+    "select_pk": {"ops_per_sec": 723, "iterations": 200, "warmup": 50, "rounds": 3},
+    "select_all": {"scans_per_sec": 112, "iterations": 200, "warmup": 50, "rounds": 3},
+    "update": {"ops_per_sec": 733, "iterations": 200, "warmup": 50, "rounds": 3},
+    "delete": {"ops_per_sec": 751, "iterations": 200, "warmup": 50, "rounds": 3}
+  }
+}

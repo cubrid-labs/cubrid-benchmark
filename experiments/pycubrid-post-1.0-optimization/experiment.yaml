@@ -1,0 +1,17 @@
+id: pycubrid-post-1.0-optimization
+title: "pycubrid post-1.0 performance optimization"
+status: completed
+question: "How much throughput does pycubrid gain from protocol-level optimizations (bytearray recv, PacketWriter header pre-allocation, _skip_bytes, __slots__, GetLastInsertIdPacket)?"
+system_under_test: "pycubrid 1.0.0 → 1.0.0+perf (same CUBRID 11.2 server)"
+workload:
+  name: "pycubrid-self-optimization-ab-test"
+  schema: bench_users (10,000 rows)
+  dataset: 10,000 pre-seeded rows
+protocol:
+  warmup: "50 discarded iterations"
+  measurement: "200 iterations, time.perf_counter_ns(), 3 rounds"
+  iterations: 3
+  metrics: [throughput_ops_per_sec]
+repro:
+  setup: "docker compose -f docker/compose.yml up -d"
+  run: "CUBRID_TEST_HOST=localhost CUBRID_TEST_PORT=33000 CUBRID_TEST_DB=benchdb CUBRID_TEST_USER=dba python3 -m pytest tests/test_benchmarks.py -v"
