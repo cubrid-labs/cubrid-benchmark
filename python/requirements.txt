@@ -1,6 +1,6 @@
 pytest>=8.0
 pytest-benchmark>=4.0
-pycubrid @ git+https://github.com/cubrid-labs/pycubrid.git@main
+pycubrid>=1.0.0,<2.0
 PyMySQL>=1.1
 sqlalchemy>=2.0
-sqlalchemy-cubrid @ git+https://github.com/cubrid-labs/sqlalchemy-cubrid.git@main
+sqlalchemy-cubrid>=1.0.0,<2.0

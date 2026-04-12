@@ -1,0 +1,32 @@
+run_id: "2026-04-12_1.0.0-baseline"
+date: "2026-04-12"
+label: "1.0.0-baseline"
+role: baseline
+compares_to: null
+comparable_group: "devbox-i5-4200M-linux5.15-docker-cubrid112"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-4200M @ 2.50GHz"
+    cores: 4
+    memory_gb: 15.3
+    os: "Linux"
+    kernel: "5.15.0-173-generic"
+  software:
+    python: "CPython 3.10.12"
+    cubrid_server: "11.2"
+    docker: "24.0.5"
+  drivers:
+    pycubrid: "1.0.0+perf"
+    sqlalchemy-cubrid: "1.0.0"
+  database:
+    name: benchdb
+    host: localhost
+    port: 33000
+    autocommit: false
+
+artifacts:
+  raw_dir: raw/
+
+notes: "Official pycubrid 1.0.0 baseline using the post-1.0 optimized release line from PR #55."

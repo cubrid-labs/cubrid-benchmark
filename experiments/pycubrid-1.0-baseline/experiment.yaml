@@ -1,0 +1,17 @@
+id: pycubrid-1.0-baseline
+title: "pycubrid 1.0.0 baseline"
+status: completed
+question: "What throughput baseline should future pycubrid and sqlalchemy-cubrid releases compare against after the 1.0.0 release line?"
+system_under_test: "pycubrid>=1.0.0 and sqlalchemy-cubrid>=1.0.0 on CUBRID 11.2"
+workload:
+  name: "tier1-python"
+  schema: default
+  dataset: benchmark-default
+protocol:
+  warmup: "1 warmup round discarded by pytest-benchmark"
+  measurement: "5 rounds via pytest-benchmark pedantic mode"
+  iterations: 5
+  metrics: [insert_ops_per_sec, select_pk_ops_per_sec, select_all_scans_per_sec, update_ops_per_sec, delete_ops_per_sec]
+repro:
+  setup: "docker compose -f docker/compose.yml up -d && python3 scripts/apply_schema.py"
+  run: "pip install -r python/requirements.txt && pytest python/bench_pycubrid.py --benchmark-json=results.json -v"

@@ -1,0 +1,19 @@
+{
+  "tool": "pytest python/bench_pycubrid.py",
+  "date": "2026-04-12",
+  "pycubrid_version": "1.0.0+perf",
+  "sqlalchemy_cubrid_version": "1.0.0",
+  "cubrid_server": "11.2",
+  "results": {
+    "insert": {"ops_per_sec": 640, "rounds": 5, "warmup_rounds": 1},
+    "select_pk": {"ops_per_sec": 732, "rounds": 5, "warmup_rounds": 1},
+    "select_all": {"scans_per_sec": 123, "rounds": 5, "warmup_rounds": 1},
+    "update": {"ops_per_sec": 736, "rounds": 5, "warmup_rounds": 1},
+    "delete": {"ops_per_sec": 746, "rounds": 5, "warmup_rounds": 1}
+  },
+  "source": {
+    "experiment": "experiments/pycubrid-post-1.0-optimization",
+    "run_id": "2026-04-12_after-optimization",
+    "reason": "PR #55 optimized results became the official 1.0.0 baseline"
+  }
+}
