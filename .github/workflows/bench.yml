@@ -81,6 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
       issues: write
     services:
       cubrid:
@@ -184,6 +185,34 @@ jobs:
         run: |
           python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
           python3 scripts/normalize_results.py results/python_tier1_extended.json > results/normalized_python_tier1_extended.json
+
+
+      - name: Emit benchforge v2 results
+        run: |
+          python3 scripts/emit_benchforge_v2.py 
+            --input results/python_tier1.json 
+            --output results/benchforge_v2/python_tier1.json 
+            --suite-name python-tier1 
+            --tier tier1 
+            --language python 
+            --driver mixed 
+            --database mixed
+          python3 scripts/emit_benchforge_v2.py 
+            --input results/python_tier1_extended.json 
+            --output results/benchforge_v2/python_tier1_extended.json 
+            --suite-name python-tier1-extended 
+            --tier tier1-extended 
+            --language python 
+            --driver mixed 
+            --database mixed
+          python3 scripts/emit_benchforge_v2.py 
+            --input results/tier2_python.json 
+            --output results/benchforge_v2/python_tier2.json 
+            --suite-name python-tier2 
+            --tier tier2 
+            --language python 
+            --driver mixed 
+            --database mixed
 
       - name: Compare nightly run against latest baseline
         id: compare_regression
@@ -297,6 +326,15 @@ jobs:
         run: |
           cp -r results/ /tmp/bench-results/
           git checkout -- results/
+
+
+      - name: Upload benchforge v2 artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchforge-v2-results-${{ github.run_id }}
+          path: /tmp/bench-results/benchforge_v2/*.json
+          if-no-files-found: error
 
       - name: Publish benchmark report
         uses: benchmark-action/github-action-benchmark@v1

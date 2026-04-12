@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cubrid-labs.github.io/cubrid-benchmark/schemas/benchforge_v2.json",
+  "title": "Benchforge Result Schema v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "metadata",
+    "provenance",
+    "results",
+    "comparable_group"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.0"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timestamp",
+        "git_sha",
+        "git_branch",
+        "runner_id",
+        "benchmark_suite"
+      ],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "git_sha": {
+          "type": "string",
+          "minLength": 1
+        },
+        "git_branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runner_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "benchmark_suite": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hardware", "software", "drivers"],
+      "properties": {
+        "hardware": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hostname", "cpu", "cores", "memory_gb", "os", "kernel"],
+          "properties": {
+            "hostname": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cpu": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cores": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "memory_gb": {
+              "type": "number",
+              "minimum": 0
+            },
+            "os": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kernel": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "software": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["python", "docker", "cubrid_server"],
+          "properties": {
+            "python": {
+              "type": "string",
+              "minLength": 1
+            },
+            "docker": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cubrid_server": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "drivers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "unit",
+          "value",
+          "range",
+          "tier",
+          "language",
+          "driver",
+          "database",
+          "extra"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "number"
+          },
+          "range": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tier": {
+            "type": "string",
+            "minLength": 1
+          },
+          "language": {
+            "type": "string",
+            "minLength": 1
+          },
+          "driver": {
+            "type": "string",
+            "minLength": 1
+          },
+          "database": {
+            "type": "string",
+            "minLength": 1
+          },
+          "extra": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "comparable_group": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
