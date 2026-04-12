@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import datetime, timezone
+import os
 
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
@@ -50,7 +51,9 @@ def _seed_users(session_factory: SessionFactory, engine: Engine, count: int, pre
 
 @pytest.fixture(scope="module")
 def mysql_engine() -> Generator[Engine, None, None]:
-    engine = create_engine("mysql+pymysql://root:bench@localhost:3306/benchdb")
+    engine = create_engine(
+        os.environ.get("MYSQL_ORM_DSN", "mysql+pymysql://root:bench@localhost:3306/benchdb")
+    )
     try:
         yield engine
     finally:
@@ -65,6 +68,30 @@ def mysql_session_factory(mysql_engine: Engine) -> SessionFactory:
 @pytest.fixture(autouse=True)
 def cleanup_bench_users(mysql_engine: Engine) -> Generator[None, None, None]:
     _clear_users(mysql_engine)
+    try:
+        yield
+    finally:
+        _clear_users(mysql_engine)
+
+
+@pytest.fixture
+def seeded_query_builder_users(
+    mysql_session_factory: SessionFactory,
+    mysql_engine: Engine,
+) -> Generator[None, None, None]:
+    _seed_users(mysql_session_factory, mysql_engine, count=1000, prefix="orm_select")
+    try:
+        yield
+    finally:
+        _clear_users(mysql_engine)
+
+
+@pytest.fixture
+def seeded_raw_sql_users(
+    mysql_session_factory: SessionFactory,
+    mysql_engine: Engine,
+) -> Generator[None, None, None]:
+    _seed_users(mysql_session_factory, mysql_engine, count=1000, prefix="raw_select")
     try:
         yield
     finally:
@@ -99,15 +126,13 @@ def _run_bulk_insert(session_factory: SessionFactory, engine: Engine, count: int
         session.commit()
 
 
-def _run_query_builder_select(session_factory: SessionFactory, engine: Engine) -> None:
-    _seed_users(session_factory, engine, count=1000, prefix="orm_select")
+def _run_query_builder_select(session_factory: SessionFactory) -> None:
     with session_factory() as session:
         rows = session.execute(select(BenchUser).order_by(BenchUser.id)).scalars().all()
         assert len(rows) == 1000
 
 
-def _run_raw_sql_select(session_factory: SessionFactory, engine: Engine) -> None:
-    _seed_users(session_factory, engine, count=1000, prefix="raw_select")
+def _run_raw_sql_select(session_factory: SessionFactory) -> None:
     with session_factory() as session:
         rows = session.execute(
             text("SELECT id, name, email, age, created_at FROM bench_users ORDER BY id")
@@ -146,11 +171,12 @@ def test_bench_bulk_insert(
 def test_bench_query_builder_select_all(
     benchmark: BenchmarkFixture,
     mysql_session_factory: SessionFactory,
-    mysql_engine: Engine,
+    seeded_query_builder_users: None,
 ) -> None:
+    del seeded_query_builder_users
     benchmark.pedantic(  # pyright: ignore[reportUnknownMemberType]
         _run_query_builder_select,
-        args=(mysql_session_factory, mysql_engine),
+        args=(mysql_session_factory,),
         rounds=5,
         warmup_rounds=1,
     )
@@ -159,11 +185,12 @@ def test_bench_query_builder_select_all(
 def test_bench_raw_sql_select_all(
     benchmark: BenchmarkFixture,
     mysql_session_factory: SessionFactory,
-    mysql_engine: Engine,
+    seeded_raw_sql_users: None,
 ) -> None:
+    del seeded_raw_sql_users
     benchmark.pedantic(  # pyright: ignore[reportUnknownMemberType]
         _run_raw_sql_select,
-        args=(mysql_session_factory, mysql_engine),
+        args=(mysql_session_factory,),
         rounds=5,
         warmup_rounds=1,
     )
