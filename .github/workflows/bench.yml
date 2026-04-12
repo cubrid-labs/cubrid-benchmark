@@ -282,9 +282,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue create \
-            --title "Nightly benchmark regression detected: Python Tier 1" \
-            --body-file results/regression_comment.md
+          existing=$(gh issue list \
+            --search "Nightly benchmark regression detected: Python Tier 1 in:title" \
+            --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file results/regression_comment.md
+          else
+            gh issue create \
+              --title "Nightly benchmark regression detected: Python Tier 1" \
+              --body-file results/regression_comment.md
+          fi
 
       - name: Save results and clean working tree
         run: |

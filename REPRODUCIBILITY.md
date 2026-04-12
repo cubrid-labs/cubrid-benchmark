@@ -136,6 +136,23 @@ This policy keeps that rule for control runs and local reproducibility checks.
 - `≥10%` relative delta: potentially meaningful effect size, still requires provenance and
   replication before filing or publishing as a regression/improvement claim
 
+### Drift formula used by `make bench-verify`
+
+The `bench-verify` target runs the Python Tier 1 suite twice back-to-back and computes
+per-benchmark relative drift as:
+
+```
+drift = abs(run2_ops - run1_ops) / run1_ops
+```
+
+This is a baseline-relative (asymmetric) formula where `run1` is the reference.
+The target fails if any individual benchmark exceeds `5%` drift.
+
+This check is intended for controlled local environments where background noise is minimal.
+On shared or noisy CI runners, the threshold may produce false positives; in those cases,
+run the verify target manually and inspect the per-benchmark output before treating a failure
+as evidence of a real regression.
+
 ## Provenance Requirements
 
 Every reportable run must preserve:

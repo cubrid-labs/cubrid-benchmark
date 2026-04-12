@@ -15,10 +15,5 @@ The official pycubrid 1.0.0 baseline is recorded in
 This baseline reflects the 1.0.0 release line after the post-1.0 optimization work from PR #55,
 which shipped as the new reference point for subsequent benchmark comparisons.
 
-| Operation | Result |
-|-----------|-------:|
-| INSERT | 640 ops/s |
-| SELECT_PK | 732 ops/s |
-| SELECT_ALL | 123 scan/s |
-| UPDATE | 736 ops/s |
-| DELETE | 746 ops/s |
+Raw results and run metadata are stored in
+[experiments/pycubrid-1.0-baseline/runs/2026-04-12_1.0.0-baseline/](experiments/pycubrid-1.0-baseline/runs/2026-04-12_1.0.0-baseline/).
