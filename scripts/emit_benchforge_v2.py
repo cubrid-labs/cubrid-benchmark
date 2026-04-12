@@ -400,7 +400,10 @@ def _validate_with_jsonschema(payload: Mapping[str, object]) -> list[str]:
     if not isinstance(schema, Mapping):
         return [f"Schema file {SCHEMA_PATH} is not a JSON object"]
 
-    validator = jsonschema.Draft7Validator(schema)
+    validator = jsonschema.Draft7Validator(
+        schema,
+        format_checker=jsonschema.FormatChecker(),
+    )
     errors = sorted(validator.iter_errors(payload), key=lambda item: list(item.path))
     if errors:
         return [error.message for error in errors]
