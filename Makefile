@@ -1,8 +1,12 @@
-.PHONY: up down clean seed compare gap-issues tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier2-python tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
+.PHONY: up down clean seed compare report gap-issues tier0 tier0-ts tier0-go tier0-rust tier1-python tier1-python-extended tier2-python tier1-ts tier1-ts-extended tier1-go tier1-go-extended tier1-rust bench-verify all
 
 COMPARE_BASELINE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_before-optimization
 COMPARE_CANDIDATE_DIR ?= experiments/pycubrid-post-1.0-optimization/runs/2026-04-12_after-optimization
 COMPARE_REPORT ?= results/compare_latest.json
+REPORT_INPUT ?=
+REPORT_OUTPUT_DIR ?=
+REPORT_BASELINE ?=
+REPORT_FORMAT ?= both
 MIN_EFFECT_SIZE ?= 10.0
 MIN_REPLICATIONS ?= 3
 TARGET_REPO ?= cubrid-labs/pycubrid
@@ -25,6 +29,26 @@ compare:
 	mkdir -p "$(dir $(COMPARE_REPORT))"
 	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)" --output "$(COMPARE_REPORT)"
 	python3 -c 'import sys; from pathlib import Path; sys.stdout.write(Path(sys.argv[1]).read_text(encoding="utf-8"))' "$(COMPARE_REPORT)"
+
+report:
+	input="$(REPORT_INPUT)"; \
+	if [ -z "$$input" ]; then \
+		input="$$(python3 -c 'from pathlib import Path; import sys; files = sorted(Path("results/benchforge_v2").glob("*.json"), key=lambda path: path.stat().st_mtime); sys.stdout.write(str(files[-1]) if files else "")')"; \
+	fi; \
+	if [ -z "$$input" ]; then \
+		printf '%s\n' 'No benchforge v2 results found under results/benchforge_v2' >&2; \
+		exit 1; \
+	fi; \
+	output_dir="$(REPORT_OUTPUT_DIR)"; \
+	if [ -z "$$output_dir" ]; then \
+		stem="$$(python3 -c 'from pathlib import Path; import sys; sys.stdout.write(Path(sys.argv[1]).stem)' "$$input")"; \
+		output_dir="results/reports/$$stem"; \
+	fi; \
+	if [ -n "$(REPORT_BASELINE)" ]; then \
+		python3 scripts/generate_report.py --input "$$input" --output-dir "$$output_dir" --format "$(REPORT_FORMAT)" --baseline "$(REPORT_BASELINE)"; \
+	else \
+		python3 scripts/generate_report.py --input "$$input" --output-dir "$$output_dir" --format "$(REPORT_FORMAT)"; \
+	fi
 
 gap-issues:
 	mkdir -p "$(dir $(COMPARE_REPORT))"
