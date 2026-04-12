@@ -18,6 +18,7 @@ Scientific benchmark suite for CUBRID database ecosystem — reproducible experi
 | 3 | pycubrid vs CUBRIDdb | active | Same-database driver comparison, optimization targets | 2026-03-27 | [Report](experiments/driver-comparison/README.md) |
 | 4 | Row-count sweep | active | SELECT fetch scaling by result set size (100–10K rows) | 2026-03-27 | [Report](experiments/row-count-sweep/README.md) |
 | 5 | ORM overhead | scaffold | Raw pycubrid vs SQLAlchemy Core vs SQLAlchemy ORM | — | [Report](experiments/orm-overhead/README.md) |
+| 6 | pycubrid 1.0 baseline | completed | Official pycubrid 1.0.0 baseline after PR #55 optimizations | 2026-04-12 | [Report](experiments/pycubrid-1.0-baseline/README.md) |
 
 ## Quick Start
 
@@ -51,6 +52,12 @@ make all       # Run all benchmarks
 - [Methodology](docs/METHODOLOGY.md)
 - [Project Board](https://github.com/orgs/cubrid-labs/projects/2)
 - [CUBRID Ecosystem](https://github.com/cubrid-labs)
+
+## Docs
+
+- [Benchmark Methodology](docs/METHODOLOGY.md)
+- [Benchmark Reproducibility Policy](REPRODUCIBILITY.md)
+- [Benchmark Runbook](RUNBOOK.md)
 
 ## License
 

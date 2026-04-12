@@ -1,0 +1,179 @@
+# Benchmark Runbook
+
+This runbook is the operator checklist for producing benchmark evidence that is comparable,
+reviewable, and suitable for filing against driver or ORM repositories.
+
+## Table of Contents
+
+- [Before You Run](#before-you-run)
+- [Tier 0 Procedure](#tier-0-procedure)
+- [Tier 1 Procedure](#tier-1-procedure)
+- [Tier 2 Procedure](#tier-2-procedure)
+- [Reproducibility Controls](#reproducibility-controls)
+- [Environment Validation Checklist](#environment-validation-checklist)
+- [Filing Quality Bar](#filing-quality-bar)
+
+## Before You Run
+
+1. Confirm you are on the intended branch and have a clean working tree for the benchmark session.
+2. Confirm the host belongs to the same `comparable_group` as the baseline you want to compare.
+3. Use the repository-standard DB stack from `docker/compose.yml`:
+   - CUBRID `11.2` on port `33000`
+   - MySQL `8.0` on port `3306`
+4. Keep the machine on AC power.
+5. Stop editors, browsers, package managers, and unrelated containers that can perturb CPU or I/O.
+6. Apply schema and deterministic seed before collecting reportable measurements.
+
+Standard setup:
+
+```bash
+make up
+make seed
+```
+
+## Tier 0 Procedure
+
+Purpose: validate that both DBs and all language harnesses are healthy before collecting
+performance evidence.
+
+Run:
+
+```bash
+make tier0
+make tier0-ts
+make tier0-go
+```
+
+Acceptance criteria:
+
+- Both databases accept connections
+- CRUD smoke tests pass in Python, TypeScript, and Go
+- No container restarts or health-check flaps occur during the gate
+
+If Tier 0 fails, stop. Do not treat any later measurements as valid until readiness is restored.
+
+## Tier 1 Procedure
+
+Purpose: measure raw driver throughput for the core sequential workloads.
+
+### Standard run
+
+```bash
+make tier1-python
+make tier1-ts
+make tier1-go
+```
+
+### Reproducibility control run
+
+Run the local control target before filing a regression or improvement claim:
+
+```bash
+make bench-verify
+```
+
+`bench-verify` executes the Python Tier 1 command twice and fails if any benchmark drifts outside
+the repository noise band for back-to-back control runs.
+
+### Evidence handling
+
+For a reportable Tier 1 session:
+
+1. Create or select the correct experiment folder
+2. Create a new immutable `runs/YYYY-MM-DD_label/` folder
+3. Record host/software/driver metadata in `run.yaml`
+4. Copy raw outputs into `raw/`
+5. Update the experiment README with the new run and conclusion
+
+## Tier 2 Procedure
+
+Purpose: measure ORM overhead relative to the raw driver path.
+
+Run the Tier 2 benchmark for the language under study after Tier 0 passes and after the same DB
+stack is freshly seeded.
+
+Expected operator flow:
+
+1. Run Tier 0 validation first
+2. Re-seed if the ORM workload mutates benchmark tables materially
+3. Execute the Tier 2 language target
+4. Preserve raw output and derived summaries in the experiment run folder
+5. Compare ORM results against the matching raw-driver baseline from the same comparable group
+
+Tier 2 conclusions must describe the ratio versus the raw driver, not only absolute throughput.
+
+## Reproducibility Controls
+
+### CPU governor and power management
+
+- Linux hosts should use the `performance` governor when possible
+- If `performance` is unavailable, record the active governor in run notes
+- Disable laptop battery saver / vendor power-saving profiles
+- Avoid thermal throttling: let the machine cool down before back-to-back replications if needed
+
+### Network isolation
+
+- Run benchmarks on a stable local network with no VPN reconnects during measurement
+- Do not run heavy downloads, package installs, or remote sync jobs during a benchmark session
+- Prefer localhost-only DB traffic; do not move DB containers to shared remote hosts for a run that
+  will be compared to local baselines
+
+### Version pinning strategy
+
+Pin and record these versions for every reportable run:
+
+- DB images: `cubrid/cubrid:11.2`, `mysql:8.0`
+- Docker / Docker Compose version
+- Python / Go / Node.js runtime versions
+- Driver and ORM versions under test
+- Benchmark command variant used
+
+If any pinned component changes, assume the old baseline is no longer directly comparable until a
+new baseline is recorded.
+
+### Significant-difference threshold
+
+Use the following interpretation inside one comparable group:
+
+- `≤5%` relative delta: equivalent/noise band
+- `>5%` and `<10%`: suspicious, requires more replication
+- `≥10%` relative delta: significant effect-size threshold for opening a performance issue,
+  provided replication and provenance requirements are met
+
+## Environment Validation Checklist
+
+Before accepting a run as evidence, confirm all items below:
+
+- [ ] `make up` completed without container restart loops
+- [ ] `make seed` completed against the expected schema
+- [ ] Tier 0 passed for Python, TypeScript, and Go
+- [ ] Host was on AC power and not in a power-saving profile
+- [ ] CPU governor was `performance` or recorded explicitly in notes
+- [ ] No unrelated heavy containers or background jobs were running
+- [ ] DB image versions matched the intended baseline
+- [ ] Driver/runtime versions were captured in `run.yaml`
+- [ ] A new immutable run folder was created under `experiments/**/runs/**`
+- [ ] Raw outputs were stored under `raw/`
+- [ ] The run references the correct `comparable_group`
+
+## Filing Quality Bar
+
+Open a performance issue only when all of the following are true:
+
+1. Minimum replications:
+   - exploratory note: `2` full replications
+   - issue-worthy claim: `3` full replications
+2. Confidence bar:
+   - the direction of change is consistent across replications
+   - the observed effect remains outside the `±5%` noise band
+   - claims at or above `10%` relative delta are preferred for filing
+3. Provenance in the issue body:
+   - experiment slug
+   - baseline run ID
+   - candidate run ID(s)
+   - `comparable_group`
+   - exact commands used
+   - links or paths to raw artifacts and report summary
+
+Issue bodies should state whether the result is a driver-throughput regression, ORM-overhead
+regression, or an improvement validated by before/after evidence.

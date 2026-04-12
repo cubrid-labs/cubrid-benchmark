@@ -1,4 +1,4 @@
-.PHONY: up down clean seed tier0 tier0-ts tier0-go tier1-python tier1-python-extended tier1-ts tier1-ts-extended tier1-go tier1-go-extended all
+.PHONY: up down clean seed tier0 tier0-ts tier0-go tier1-python tier1-python-extended tier1-ts tier1-ts-extended tier1-go tier1-go-extended bench-verify all
 
 up:
 	docker compose -f docker/compose.yml up -d
@@ -19,6 +19,12 @@ tier0:
 
 tier1-python:
 	cd python && pytest bench_pycubrid.py bench_pymysql.py --benchmark-json=../results/python_tier1.json -v
+
+bench-verify:
+	mkdir -p results
+	cd python && pytest bench_pycubrid.py bench_pymysql.py --benchmark-json=../results/bench_verify_run1.json -v
+	cd python && pytest bench_pycubrid.py bench_pymysql.py --benchmark-json=../results/bench_verify_run2.json -v
+	python3 -c 'import json, sys; from pathlib import Path; run1 = json.loads(Path("results/bench_verify_run1.json").read_text())["benchmarks"]; run2 = json.loads(Path("results/bench_verify_run2.json").read_text())["benchmarks"]; by_name = {item["name"]: item for item in run2}; deltas = []; failures = []; threshold = 0.05; [deltas.append((item["name"], item["stats"]["ops"], by_name[item["name"]]["stats"]["ops"], abs(by_name[item["name"]]["stats"]["ops"] - item["stats"]["ops"]) / item["stats"]["ops"])) or (failures.append(item["name"]) if abs(by_name[item["name"]]["stats"]["ops"] - item["stats"]["ops"]) / item["stats"]["ops"] > threshold else None) for item in run1 if item["name"] in by_name]; print("bench-verify: compared %d benchmarks" % len(deltas)); [print("- %s: run1=%.4f ops/s run2=%.4f ops/s delta=%.2f%%" % (name, ops1, ops2, delta * 100.0)) for name, ops1, ops2, delta in deltas]; sys.exit("bench-verify failed: back-to-back variance exceeded 5%% for %s" % ", ".join(failures)) if failures else print("bench-verify: all benchmark deltas within 5%%")'
 
 tier1-python-extended:
 	cd python && python3 ../scripts/collect_metrics.py --result-json ../results/python_tier1_extended.json --metrics-json ../results/python_tier1_extended.metrics.json -- pytest bench_pycubrid_extended.py bench_pymysql_extended.py --benchmark-json=../results/python_tier1_extended.json -v
