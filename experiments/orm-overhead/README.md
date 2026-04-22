@@ -97,7 +97,7 @@ python experiments/orm-overhead/workers/worker_sqlalchemy_orm.py /tmp/orm_overhe
 | 2026-03-28_post-sa-optimization | 2026-03-28 | post-sa-optimization | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_first-measurement | ORM absolute latency unchanged; raw pycubrid ~15% faster on writes |
 | 2026-04-21_post-native-ping | 2026-04-21 | post-native-ping | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_post-sa-optimization | Updated baseline on current stack; NOT a ping causal test (workers don't exercise ping path) |
 | 2026-04-22_multitrial-baseline | 2026-04-22 | multitrial-baseline | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-04-21_post-native-ping | 5-trial repeat shows several 04-21 read deltas were within noise bands, while Core/ORM full-scan regressions persisted |
-| 2026-04-22_native-ping-hotpath | 2026-04-22 | native-ping-hotpath | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-04-22_multitrial-baseline | Paired same-version A/B isolated native ping and showed a practical app-level hot-path win |
+| 2026-04-22_native-ping-hotpath | 2026-04-22 | native-ping-hotpath | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-04-22_multitrial-baseline | Paired same-version A/B isolated native ping and showed a practical pre-ping hot-path win |
 
 ## 2026-04-21 update
 
@@ -127,9 +127,11 @@ Run [`2026-04-22_native-ping-hotpath`](runs/2026-04-22_native-ping-hotpath/) is 
 
 - **Mechanism confirmed**: raw `ping_only` showed a large win for native ping (median throughput delta **+279.9%**, bootstrap 95% CI **[+278.0%, +283.9%]**), with p50/p95 both materially lower and zero errors in both arms.
 - **App-level hot path also improved**: both SQLAlchemy hot-path steps cleared the practical-win bar with CI excluding zero — Core `checkout_select_by_pk` throughput median delta **+108.2%** (95% CI **[+107.8%, +109.6%]**), ORM `session_select_by_pk` **+42.1%** (95% CI **[+41.8%, +43.9%]**). p50 and p95 also improved rather than regressed.
-- **Honest go/no-go conclusion**: this run supports a **practical app-level win**, not just a microbench mechanism win. Under a workload that deliberately forces pre-ping onto the hot loop, native CHECK_CAS ping is measurably and repeatedly better than the legacy `SELECT 1` path.
+- **Honest go/no-go conclusion**: this run supports a **practical pre-ping hot-path win**, not just a microbench mechanism win. Under a workload that deliberately forces pre-ping onto the hot loop, native CHECK_CAS ping is measurably and repeatedly better than the legacy `SELECT 1` path.
 
-Methodology caveat: this is intentionally a ping-heavy benchmark, not a claim that all ORM workloads speed up by the same amount. The environment still reports **SQLAlchemy 2.0.48** locally, not 2.0.49, so the result should be interpreted as valid for the verified installed stack captured in `run.yaml`.
+The bootstrap 95% CIs are computed from 7 paired trial-level deltas, so the tight intervals reflect low repeatability variance on this host, not per-operation resampling. `ping_calls` is a worker-level counter that includes warmup/setup activity, so it will exceed measured per-step `ops`.
+
+Methodology caveat: this is intentionally a ping-heavy benchmark that models short-lived checkout/session-per-op workloads with `pool_pre_ping=True` — not a claim that all ORM workloads speed up by the same amount, and not evidence about steady-state workloads that reuse checked-out connections. Trial order was randomized but not counterbalanced (`select1` ran first in 6 of 7 trials), so residual order effects remain possible. The environment still reports **SQLAlchemy 2.0.48** locally, not 2.0.49, so the result should be interpreted as valid for the verified installed stack captured in `run.yaml`.
 
 ## Results: 2026-03-28_first-measurement (Baseline)
 

@@ -66,6 +66,8 @@ notes: >
   max_overflow=0, and short-lived checkout/session loops, while the
   `select1` arm monkey-patches only `engine.dialect.do_ping` to the old
   cursor-based `SELECT 1` path. Trial arm order is randomized per trial
-  with seed=42 and recorded above. This is the causal native-ping hot-path
+  with seed=42 and recorded above; trial order was randomized but not
+  counterbalanced — `select1` ran first in 6 of 7 trials, so residual
+  order effects remain possible. This is the causal native-ping hot-path
   test requested by Oracle; any claimed win must be supported by the paired
   bootstrap deltas rather than cross-run comparisons.

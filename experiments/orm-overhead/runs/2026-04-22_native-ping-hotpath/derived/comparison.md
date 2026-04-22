@@ -1,11 +1,14 @@
 # 2026-04-22_native-ping-hotpath
 
 > Paired same-version A/B: `native` CHECK_CAS ping vs forced `select1` ping path.
-> Verdict uses bootstrap 95% CI on paired trial deltas. Throughput delta > 0 is good; p50 delta < 0 is good.
+> Verdict uses bootstrap 95% CI on paired trial deltas (n=7). Throughput delta > 0 is good; p50 delta < 0 is good.
+> This benchmark forces `pool_pre_ping` onto every checkout/session operation; it does not represent steady-state workloads that reuse checked-out connections.
+> The 95% CIs are computed from 7 paired trial-level deltas, so the tight intervals reflect low repeatability variance on this host, not per-operation resampling.
+> `ping_calls` is a worker-level counter that includes warmup and setup activity, so it will exceed measured per-step `ops`.
 
 ## Overall classification
 
-**practical app-level win**
+**practical pre-ping hot-path win**
 
 | worker | step | throughput median delta % | throughput 95% CI | p50 median delta % | p50 95% CI | p95 median delta % | p95 95% CI | verdict |
 |---|---|---:|---:|---:|---:|---:|---:|---|
