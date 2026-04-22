@@ -1,5 +1,21 @@
 # 2026-04-21_post-native-ping vs 2026-03-28_post-sa-optimization
 
+> **⚠️ Caveat — updated baseline, NOT a ping causal test.**
+> The workers in this experiment use a single long-lived connection and
+> do not enable `pool_pre_ping`, so the native CHECK_CAS ping path
+> introduced in pycubrid 1.3.2 / sqlalchemy-cubrid 1.4.2 is **never
+> exercised in the hot loop**. The 03-28 → 04-21 delta also spans
+> multiple stack changes (pycubrid 0.6.0 → 1.3.2,
+> sqlalchemy-cubrid 0.7.1 → 1.4.2, SQLAlchemy 2.0.48 → 2.0.49) and is
+> a single trial. Treat the numbers below as an updated steady-state
+> baseline only; do not attribute regressions or gains to native ping.
+> The Core `insert_batch` +123% outlier is most likely from
+> `use_insertmanyvalues` being enabled in the dialect (separate change),
+> not from ping. Causal isolation runs (3–5 trials with bands;
+> pycubrid 1.3.1 vs 1.3.2 raw-only; sqla 1.4.1 vs 1.4.2 with pycubrid
+> pinned) are required before any per-change claim.
+
+
 | operation | worker | 03-28 ops/s | 04-21 ops/s | Δ% | 03-28 p95 ms | 04-21 p95 ms | Δ% |
 |---|---|---:|---:|---:|---:|---:|---:|
 | insert_single | raw_pycubrid | 2.26 | 2.40 | +6.19% | 77.62 | 66.72 | -14.04% |
