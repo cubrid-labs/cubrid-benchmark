@@ -96,12 +96,29 @@ python experiments/orm-overhead/workers/worker_sqlalchemy_orm.py /tmp/orm_overhe
 | 2026-03-28_first-measurement | 2026-03-28 | first-measurement | devbox-i5-4200M-linux5.15-docker-cubrid112 | — (baseline) | Core ≈ raw for writes; ORM adds 1.7–2.1× on reads |
 | 2026-03-28_post-sa-optimization | 2026-03-28 | post-sa-optimization | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_first-measurement | ORM absolute latency unchanged; raw pycubrid ~15% faster on writes |
 | 2026-04-21_post-native-ping | 2026-04-21 | post-native-ping | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_post-sa-optimization | Updated baseline on current stack; NOT a ping causal test (workers don't exercise ping path) |
+| 2026-04-22_multitrial-baseline | 2026-04-22 | multitrial-baseline | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-04-21_post-native-ping | 5-trial repeat shows several 04-21 read deltas were within noise bands, while Core/ORM full-scan regressions persisted |
 
 ## 2026-04-21 update
 
 Run [`2026-04-21_post-native-ping`](runs/2026-04-21_post-native-ping/) re-measured the same WorkerInput against the current stack (pycubrid 1.3.2, sqlalchemy-cubrid 1.4.2, SQLAlchemy 2.0.49). Preliminary numbers show improved write performance, mild read regressions (>5% on `select_by_pk` and `select_full_scan` across all three workers), and a large SQLAlchemy Core `insert_batch` gain (+123%, most likely from `use_insertmanyvalues` being enabled in the dialect rather than from ping).
 
 > **This rerun is not a causal test of the native CHECK_CAS ping change.** The workers use a single long-lived connection without `pool_pre_ping`, so `Connection.ping()` is never called in the hot loop. The 03-28 → 04-21 delta also spans multiple stack changes (pycubrid 0.6.0 → 1.3.2, sqlalchemy-cubrid 0.7.1 → 1.4.2, SQLAlchemy 2.0.48 → 2.0.49) and is a single trial. Treat the deltas as an updated steady-state baseline only. Follow-up isolation runs (3–5 trials with bands; pycubrid 1.3.1 vs 1.3.2 raw-only; sqla 1.4.1 vs 1.4.2 with pycubrid pinned) are required before any per-change claim. Note also that worker `throughput_ops_s` is computed against the worker's total duration rather than a fixed measurement window, which slightly compresses per-step rates — this does not explain the read-only regression pattern, but is worth tracking.
+
+## 2026-04-22 update
+
+Run [`2026-04-22_multitrial-baseline`](runs/2026-04-22_multitrial-baseline/) repeated the exact `2026-04-21_post-native-ping` WorkerInput **5× per worker** to add trial-to-trial bands. The aggregation reports median, `[min..max]`, and IQR for each worker/operation from the five trial-level `throughput_ops_s` and `p95_ns` observations.
+
+- **Strongest repeatable signal in the current rerun:** `select_full_scan` stayed slower than `2026-03-28_post-sa-optimization` for all three workers even after adding bands. Relative to the 04-22 five-trial medians, throughput remained lower by about **-7.4% raw**, **-8.6% Core**, and **-6.5% ORM**; p95 latency stayed higher by about **+18.2% raw**, **+20.6% Core**, and **+5.9% ORM**.
+- **Smaller and less stable than `select_full_scan`:** `select_by_pk` also remained worse than the 03-28 single-trial baseline in the 04-22 medians, but the 04-21 single-trial values were not consistently representative of the new 5-trial band. Raw and ORM 04-21 throughput landed outside the 04-22 throughput band, and ORM 04-21 p95 was below the 04-22 band floor, so this shift should be treated as weaker evidence than the full-scan regression rather than as a cleanly established or disproven effect.
+- **Still separate from ping:** this remains a steady-state rerun, not a ping causal test. The workers keep one long-lived connection and do not enable `pool_pre_ping`, so the native ping path is still absent from the hot loop.
+
+One environment caveat: runtime verification on 2026-04-22 found **SQLAlchemy 2.0.48** installed locally, not `2.0.49` as recorded in the 04-21 run metadata. That mismatch weakens direct stack attribution further, but it does not change the main conclusion from the 5-trial rerun: `select_full_scan` remains the clearest repeated regression, while `select_by_pk` is smaller and less stable to interpret.
+
+To regenerate the multitrial derived artifacts from the raw JSON outputs, run:
+
+```bash
+python3 scripts/aggregate_multitrial.py
+```
 
 ## Results: 2026-03-28_first-measurement (Baseline)
 
@@ -174,27 +191,26 @@ The overhead *ratios* appear higher because **raw pycubrid itself improved ~15% 
 
 ## Latest Conclusion
 
-**Updated baseline only — no causal claim about the native CHECK_CAS ping change can be made from this run.**
+**The 5-trial rerun weakens the original 04-21 single-trial read-regression story: `select_full_scan` remains the clearest repeated regression, while `select_by_pk` still trends slower than 03-28 but is smaller and less stable to interpret.**
 
-Compared with `2026-03-28_post-sa-optimization`:
+Compared with `2026-03-28_post-sa-optimization` using the 04-22 five-trial medians:
 
-- **raw pycubrid**: write-heavy operations improved; both read workloads regressed (>5% throughput drop on `select_by_pk` and `select_full_scan`)
-- **SQLAlchemy Core**: `insert_batch` improved sharply (+123%, most likely from `use_insertmanyvalues` being enabled in the dialect — a separate change from ping); both read workloads regressed on throughput and p95 latency
-- **SQLAlchemy ORM**: writes generally improved; both read workloads regressed on throughput, and `select_by_pk` also regressed on p95 latency
+- **raw pycubrid**: write-heavy operations remain improved; `select_full_scan` still regresses clearly, while `select_by_pk` also remains slower than 03-28 but is less stable to attribute from one trial
+- **SQLAlchemy Core**: `insert_batch` remains much faster (still most plausibly tied to `use_insertmanyvalues`, not ping); `select_full_scan` regression persists, while `select_by_pk` remains a milder shift that needs more controlled follow-up
+- **SQLAlchemy ORM**: write performance remains improved overall; `select_full_scan` still regresses, and `select_by_pk` also trends slower than 03-28, but the 04-21 single-trial value does not map cleanly onto the 5-trial band
 
-The original overhead shape still holds — Core stays near raw for many operations, ORM still carries the largest read overhead. However, the workers in this experiment use a single long-lived connection without `pool_pre_ping`, so the native CHECK_CAS ping path introduced in pycubrid 1.3.2 / sqlalchemy-cubrid 1.4.2 is **never exercised in the hot loop**. The 03-28 → 04-21 delta also spans multiple stack changes (pycubrid 0.6.0 → 1.3.2, sqlalchemy-cubrid 0.7.1 → 1.4.2, SQLAlchemy 2.0.48 → 2.0.49) and a single trial; the host kernel also drifted (5.15.0-173 → 5.15.0-176). Any per-change attribution from these numbers would be unsound.
+The original overhead shape still holds — Core stays near raw for many operations, ORM still carries the largest read overhead. But this experiment still does **not** isolate native CHECK_CAS ping behavior: the workers use a single long-lived connection without `pool_pre_ping`, so the ping path is never exercised in the hot loop. The rerun also exposed an environment mismatch (`SQLAlchemy 2.0.48` observed locally on 2026-04-22 versus `2.0.49` recorded in the 04-21 metadata), so any per-change attribution would remain unsound even with the improved statistics.
 
 **Next steps**:
 
-1. Re-run with 3–5 trials and report median + bands rather than single before/after.
-2. Isolate pycubrid by running the raw worker on `1.3.1` vs `1.3.2` only (everything else fixed).
-3. Isolate sqlalchemy-cubrid by running Core/ORM on `1.4.1` vs `1.4.2` with pycubrid pinned to `1.3.2`.
-4. Investigate the Core `insert_batch` +123% as a separate finding tied to `use_insertmanyvalues`.
-5. Add a connection-health / reconnect-heavy benchmark where native ping behavior is actually on the hot path.
+1. Isolate pycubrid by running the raw worker on `1.3.1` vs `1.3.2` only (everything else fixed).
+2. Isolate sqlalchemy-cubrid by running Core/ORM on `1.4.1` vs `1.4.2` with pycubrid pinned to `1.3.2`.
+3. Investigate the Core `insert_batch` improvement as a separate finding tied to `use_insertmanyvalues`.
+4. Add a connection-health / reconnect-heavy benchmark where native ping behavior is actually on the hot path.
 
 ### Environment
 
 - CUBRID 11.2.9.0866 (Docker, container `pycubrid-cubrid-1`)
-- pycubrid 1.3.2, sqlalchemy-cubrid 1.4.2, SQLAlchemy 2.0.49
+- pycubrid 1.3.2, sqlalchemy-cubrid 1.4.2, SQLAlchemy 2.0.49 in the 04-21 metadata; 04-22 runtime verification found 2.0.48 locally
 - CPython 3.10.12, Intel i5-4200M, 4 cores, 15.3 GB RAM
 - Protocol: 10s duration per operation, 2s warmup, seed=42, 1000 seed rows, batch_size=100, concurrency=1
