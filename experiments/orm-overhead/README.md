@@ -95,6 +95,11 @@ python experiments/orm-overhead/workers/worker_sqlalchemy_orm.py /tmp/orm_overhe
 |--------|------|-------|-----------------|-------------|-------------|
 | 2026-03-28_first-measurement | 2026-03-28 | first-measurement | devbox-i5-4200M-linux5.15-docker-cubrid112 | — (baseline) | Core ≈ raw for writes; ORM adds 1.7–2.1× on reads |
 | 2026-03-28_post-sa-optimization | 2026-03-28 | post-sa-optimization | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_first-measurement | ORM absolute latency unchanged; raw pycubrid ~15% faster on writes |
+| 2026-04-21_post-native-ping | 2026-04-21 | post-native-ping | devbox-i5-4200M-linux5.15-docker-cubrid112 | 2026-03-28_post-sa-optimization | Native CHECK_CAS ping did not materially help steady-state reads; insert_batch improved most |
+
+## 2026-04-21 update
+
+Run [`2026-04-21_post-native-ping`](runs/2026-04-21_post-native-ping/) re-measured the same WorkerInput against pycubrid 1.3.2 and sqlalchemy-cubrid 1.4.2, which replace `SELECT 1` ping paths with native CHECK_CAS ping. In this steady-state CRUD workload, the clearest gains were on `insert_batch`, while `select_by_pk` and `select_full_scan` throughput regressed by more than 5% across all three workers; p95 latency also worsened on five of the six read cases, so the ping-path change does not show a consistent application-layer win here.
 
 ## Results: 2026-03-28_first-measurement (Baseline)
 
@@ -167,25 +172,21 @@ The overhead *ratios* appear higher because **raw pycubrid itself improved ~15% 
 
 ## Latest Conclusion
 
-**Original hypothesis confirmed; v0.7.1 optimization impact not measurable in this workload.**
+**The native CHECK_CAS ping change does not produce a clear steady-state ORM overhead win in this workload.**
 
-The baseline findings still hold:
+Compared with `2026-03-28_post-sa-optimization`:
 
-- **SQLAlchemy Core**: 0.93–1.24× overhead — near-raw for writes, small overhead for reads
-- **SQLAlchemy ORM**: 1.01–2.09× overhead — reads most impacted (select_full_scan 2.06–2.09×)
-- **Write latency**: Dominated by CUBRID server-side commit (~55–66ms), masking any ORM overhead
+- **raw pycubrid**: write-heavy operations improved, but both read workloads regressed (>5% throughput drop on `select_by_pk` and `select_full_scan`)
+- **SQLAlchemy Core**: `insert_batch` improved sharply, but both read workloads also regressed on throughput and p95 latency
+- **SQLAlchemy ORM**: writes generally improved, while both read workloads regressed on throughput; `select_by_pk` also regressed on p95 latency
 
-The post-optimization run shows sqlalchemy-cubrid v0.7.1's compilation caching and result mapping improvements did not measurably reduce overhead in a steady-state benchmark with repetitive queries. The optimizations are expected to benefit:
+The original overhead shape still holds — Core stays near raw for many operations, ORM still carries the largest read overhead — but this ping-path update does not show a consistent application-layer improvement in the repetitive 10-second CRUD loop used here.
 
-1. **Cold-start scenarios** — first compilation of each query
-2. **Diverse query workloads** — many different SQL shapes hitting the cache
-3. **Long-running applications** — amortized cache benefit over thousands of unique queries
-
-**Next steps**: Design a benchmark specifically targeting compilation caching (many unique query shapes, cold-start measurement) to properly evaluate the v0.7.1 optimizations.
+**Next steps**: re-run with multiple repetitions and add a connection-health or reconnect-heavy benchmark where native ping behavior is more likely to matter than in this already-warmed steady-state loop.
 
 ### Environment
 
-- CUBRID 11.2.9.0866 (Docker)
-- pycubrid 0.6.0, sqlalchemy-cubrid 0.7.1, SQLAlchemy 2.0.48
+- CUBRID 11.2.9.0866 (Docker, container `pycubrid-cubrid-1`)
+- pycubrid 1.3.2, sqlalchemy-cubrid 1.4.2, SQLAlchemy 2.0.49
 - CPython 3.10.12, Intel i5-4200M, 4 cores, 15.3 GB RAM
-- Protocol: 10s duration per operation, 2s warmup, seed=42, 1000 seed rows
+- Protocol: 10s duration per operation, 2s warmup, seed=42, 1000 seed rows, batch_size=100, concurrency=1
